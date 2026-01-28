@@ -4,7 +4,6 @@ using AwesomeLogger;
 using AwesomeAssertions;
 using System.Collections.Generic;
 using R3;
-using System.Linq;
 using System.Threading.Tasks;
 
 public sealed class TheMinimumLogLevelProperty
