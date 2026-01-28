@@ -62,9 +62,11 @@ public sealed class Logger : ILogger
     /// Initializes a new instance of the <see cref="Logger"/> class.
     /// </summary>
     /// <param name="name">The name of the logger.</param>
-    public Logger(string name)
+    /// <param name="parent">The parent <see cref="ILogger"/>.</param>
+    public Logger(string name, ILogger? parent = null)
     {
         Name = name;
+        Parent = parent;
 
         channel = Channel.CreateUnbounded<LogMessage>(new UnboundedChannelOptions
         {
