@@ -18,6 +18,32 @@ jobs:
     
     - name: Restore dependencies
       run: dotnet restore
-    
+
     - name: Build
       run: dotnet build --no-restore --configuration Release
+  
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        test-project:
+          - tests/LoggerTests/src/LoggerTests.csproj
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build tests
+      run: dotnet build --no-restore --configuration Release
+    
+    - name: Run ${{ matrix.test-project }}
+      run: dotnet run --project ${{ matrix.test-project }} --no-build --configuration Release
+    
