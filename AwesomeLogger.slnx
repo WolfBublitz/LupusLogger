@@ -7,4 +7,9 @@
   <Folder Name="/src/">
     <Project Path="src/AwesomeLogger.csproj" />
   </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/LoggerTests/" />
+  <Folder Name="/tests/LoggerTests/src/">
+    <Project Path="tests/LoggerTests/src/LoggerTests.csproj" />
+  </Folder>
 </Solution>

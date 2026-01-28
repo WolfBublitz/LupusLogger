@@ -5,7 +5,7 @@ ConsoleLogSink consoleLogSink = new();
 
 await using ILogger logger = new Logger("SimpleLogger");
 
-logger.Messages.Subscribe(consoleLogSink);
+logger.LogMessages.Subscribe(consoleLogSink);
 
 logger.Info("This is an info message.");
 logger.Warning("This is a warning message.");

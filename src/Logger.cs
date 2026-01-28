@@ -49,8 +49,9 @@ public sealed class Logger : ILogger
     public ILogger? Parent { get; init; }
 
     /// <inheritdoc/>
-    public Observable<LogMessage> Messages => logMessageSubject
+    public Observable<LogMessage> LogMessages => logMessageSubject
         .Where(logMessage => logMessage.Message != flushItem)
+        .Where(logMessage => logMessage.LogLevel == null || logMessage.LogLevel >= MinimumLogLevel)
         .AsObservable();
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -110,6 +111,18 @@ public sealed class Logger : ILogger
 
         _ = channel.Writer.TryWrite(logMessage);
     }
+
+    /// <inheritdoc/>
+    public void Info(object message)
+        => Log(LogLevel.Info, message);
+
+    /// <inheritdoc/>
+    public void Warning(object message)
+        => Log(LogLevel.Warning, message);
+
+    /// <inheritdoc/>
+    public void Error(object message)
+        => Log(LogLevel.Error, message);
 
     /// <inheritdoc/>
     public void Log(Exception exception)
