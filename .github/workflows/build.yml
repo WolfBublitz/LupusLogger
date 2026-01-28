@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         test-project:
-          - tests/LoggerTests/src/LoggerTests.csproj
+          - LoggerTests
 
     steps:
     - uses: actions/checkout@v4
@@ -45,5 +45,5 @@ jobs:
       run: dotnet build --no-restore --configuration Release
     
     - name: Run ${{ matrix.test-project }}
-      run: dotnet run --project ${{ matrix.test-project }} --no-build --configuration Release
+      run: dotnet run --project tests/${{ matrix.test-project }}/src/${{ matrix.test-project }}.csproj --no-build --configuration Release
     
