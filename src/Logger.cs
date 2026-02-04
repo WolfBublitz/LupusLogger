@@ -4,7 +4,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using R3;
 
-namespace Lupus.Logger;
+namespace LupusLogger;
 
 /// <inheritdoc/>
 public sealed class Logger : ILogger

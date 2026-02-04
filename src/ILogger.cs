@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using R3;
 
-namespace Lupus.Logger;
+namespace LupusLogger;
 
 /// <summary>
 /// A logger.

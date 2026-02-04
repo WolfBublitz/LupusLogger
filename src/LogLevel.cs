@@ -1,4 +1,4 @@
-namespace Lupus.Logger;
+namespace LupusLogger;
 
 /// <summary>
 /// The log level.

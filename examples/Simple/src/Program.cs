@@ -1,5 +1,5 @@
 ﻿using System;
-using Lupus.Logger;
+using LupusLogger;
 
 ConsoleLogSink consoleLogSink = new();
 

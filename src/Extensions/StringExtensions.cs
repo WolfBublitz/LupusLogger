@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Lupus.Logger;
+namespace LupusLogger;
 
 internal static class StringExtensions
 {
