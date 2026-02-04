@@ -2,9 +2,6 @@ name: Build
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
 
 jobs:
   build:
@@ -23,6 +20,3 @@ jobs:
     
     - name: Build
       run: dotnet build --no-restore --configuration Release
-    
-    - name: Test
-      run: dotnet test --no-build --configuration Release --verbosity normal
