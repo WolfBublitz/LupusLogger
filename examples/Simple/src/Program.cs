@@ -1,5 +1,5 @@
 ﻿using System;
-using AwesomeLogger;
+using Lupus.Logger;
 
 ConsoleLogSink consoleLogSink = new();
 

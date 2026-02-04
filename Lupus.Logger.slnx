@@ -5,6 +5,6 @@
     <Project Path="examples/Simple/src/Simple.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/AwesomeLogger.csproj" />
+    <Project Path="src/Lupus.Logger.csproj" />
   </Folder>
 </Solution>

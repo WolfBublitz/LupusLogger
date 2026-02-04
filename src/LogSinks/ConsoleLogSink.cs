@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AwesomeLogger;
+namespace Lupus.Logger;
 
 /// <summary>
 /// A log sink that writes log messages to the console.

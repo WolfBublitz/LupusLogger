@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using R3;
 
-namespace AwesomeLogger;
+namespace Lupus.Logger;
 
 /// <summary>
 /// A base class for log sinks.

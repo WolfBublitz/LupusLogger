@@ -1,4 +1,4 @@
-namespace AwesomeLogger;
+namespace Lupus.Logger;
 
 /// <summary>
 /// The log level.
