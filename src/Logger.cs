@@ -4,7 +4,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using R3;
 
-namespace LupusLogger;
+namespace WB.Logging;
 
 /// <inheritdoc/>
 public sealed class Logger : ILogger
@@ -17,8 +17,6 @@ public sealed class Logger : ILogger
     private readonly Task task;
 
     private readonly CancellationTokenSource cancellationTokenSource = new();
-
-    private readonly object flushItem = new();
 
     private readonly Subject<LogMessage> logMessageSubject = new();
 
@@ -49,9 +47,14 @@ public sealed class Logger : ILogger
     public ILogger? Parent { get; init; }
 
     /// <inheritdoc/>
-    public Observable<LogMessage> Messages => logMessageSubject
-        .Where(logMessage => logMessage.Message != flushItem)
+    public Observable<LogMessage> LogMessages => logMessageSubject
+        .Where(logMessage => logMessage.LogLevel is null || logMessage.LogLevel >= MinimumLogLevel)
         .AsObservable();
+
+    /// <summary>
+    /// Gets or sets the <see cref="ITimestampProvider"/> to use for log messages.
+    /// </summary>
+    public ITimestampProvider TimestampProvider { get; init; } = new LocalTimeTimestampProvider();
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Public Constructors                                                         │
@@ -91,22 +94,19 @@ public sealed class Logger : ILogger
     /// <inheritdoc/>
     public async Task FlushAsync(CancellationToken cancellationToken = default)
     {
-        TaskCompletionSource taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        FlushItem flushItem = new();
 
-        using IDisposable registration = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(cancellationToken));
-        using IDisposable subscription = logMessageSubject
-            .Where(logMessage => logMessage.Message == flushItem)
-            .Subscribe(_ => taskCompletionSource.SetResult());
+        using IDisposable registration = cancellationToken.Register(flushItem.Cancel);
 
         Log(null, flushItem);
 
-        await taskCompletionSource.Task.ConfigureAwait(false);
+        await flushItem.Task.ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
     public void Log(LogLevel? logLevel, object message)
     {
-        LogMessage logMessage = new(DateTimeOffset.Now, [Name], logLevel, message);
+        LogMessage logMessage = new(TimestampProvider.CurrentTimestamp, [Name], logLevel, message);
 
         _ = channel.Writer.TryWrite(logMessage);
     }
@@ -128,7 +128,14 @@ public sealed class Logger : ILogger
         {
             await foreach (LogMessage logMessage in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
-                logMessageSubject.OnNext(logMessage);
+                if (logMessage.Message is FlushItem flushItem)
+                {
+                    flushItem.Complete();
+                }
+                else
+                {
+                    logMessageSubject.OnNext(logMessage);
+                }
             }
         }
         catch (OperationCanceledException)

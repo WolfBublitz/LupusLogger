@@ -1,4 +1,4 @@
-namespace LupusLogger;
+namespace WB.Logging;
 
 /// <summary>
 /// The log level.

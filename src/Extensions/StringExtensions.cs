@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LupusLogger;
+namespace WB.Logging;
 
 internal static class StringExtensions
 {
@@ -11,6 +11,12 @@ internal static class StringExtensions
     {
         if (string.IsNullOrEmpty(@this) || width < 1)
         {
+            yield break;
+        }
+
+        if (width <= 0)
+        {
+            yield return @this;
             yield break;
         }
 

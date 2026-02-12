@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using R3;
 
-namespace LupusLogger;
+namespace WB.Logging;
 
 /// <summary>
 /// A base class for log sinks.

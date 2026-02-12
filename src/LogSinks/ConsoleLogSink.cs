@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LupusLogger;
+namespace WB.Logging;
 
 /// <summary>
 /// A log sink that writes log messages to the console.
@@ -42,7 +42,7 @@ public sealed class ConsoleLogSink : LogSinkBase
 
         int position = WriteSpace();
         string message = logMessage.Message?.ToString() ?? string.Empty;
-        string[] lines = [.. message.WrapLines(Console.WindowWidth - position)];
+        string[] lines = Console.WindowWidth == 0 ? [message] : [.. message.WrapLines(Console.WindowWidth - position)];
 
         for (int i = 0; i < lines.Length - 1; i++)
         {

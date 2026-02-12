@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)../src/LupusLogger.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../src/WB.Logging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

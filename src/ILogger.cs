@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using R3;
 
-namespace LupusLogger;
+namespace WB.Logging;
 
 /// <summary>
 /// A logger.
@@ -17,7 +17,7 @@ public interface ILogger : IAsyncDisposable
     /// <summary>
     /// Gets an observable sequence of <see cref="LogMessage"/>s.
     /// </summary>
-    public Observable<LogMessage> Messages { get; }
+    public Observable<LogMessage> LogMessages { get; }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Public Methods.                                                             │
