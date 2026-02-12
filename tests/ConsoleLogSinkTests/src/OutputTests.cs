@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using WB.Logging;
@@ -7,20 +8,14 @@ namespace ConsoleLogSinkTests.OutputTests;
 public sealed class TheConsoleLogSink
 {
     [Test]
-    public async Task ShouldWriteLogMessagesToTheConsole()
+    public void ShouldWriteLogMessagesToTheConsole()
     {
         // Arrange
         using TestConsole testConsole = new();
         ConsoleLogSink consoleLogSink = new();
-        Logger logger = new("TestLogger")
-        {
-            TimestampProvider = new FakeTimestampProvider(),
-        };
-        logger.LogMessages.Subscribe(consoleLogSink);
 
         // Act
-        logger.Log(LogLevel.Info, "Hello, console!");
-        await logger.FlushAsync().ConfigureAwait(false);
+        consoleLogSink.OnNext(new LogMessage(DateTimeOffset.MinValue, [], null, "Hello, console!"));
 
         // Assert
         string consoleOutput = testConsole.Output;
