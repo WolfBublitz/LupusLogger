@@ -16,6 +16,8 @@
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="AwesomeAssertions.Analyzers" />
     <PackageReference Include="TUnit" />
+    <PackageReference Include="Verify" />
+    <PackageReference Include="Verify.TUnit" />
   </ItemGroup>
 
 </Project>
