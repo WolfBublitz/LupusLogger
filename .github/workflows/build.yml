@@ -44,4 +44,11 @@ jobs:
     
     - name: Test
       working-directory: tests/${{ matrix.test }}/src
-      run: dotnet run --no-restore --configuration Release
+      run: dotnet test --no-restore --configuration Release --logger "trx;LogFileName=../../test-results-${{ matrix.test }}.trx"
+    
+    - name: Publish test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.test }}
+        path: test-results-${{ matrix.test }}.trx
