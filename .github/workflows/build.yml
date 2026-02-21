@@ -26,6 +26,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        test: [ConsoleLogSinkTests, LoggerTests]
     
     steps:
     - uses: actions/checkout@v4
@@ -36,9 +39,9 @@ jobs:
         dotnet-version: '10.0.x'
     
     - name: Restore dependencies
-      working-directory: src
+      working-directory: tests/${{ matrix.test }}/src
       run: dotnet restore
     
     - name: Test
-      working-directory: src
+      working-directory: tests/${{ matrix.test }}/src
       run: dotnet run --no-restore --configuration Release
