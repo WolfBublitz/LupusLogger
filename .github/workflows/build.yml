@@ -44,7 +44,7 @@ jobs:
     
     - name: Test
       working-directory: tests/${{ matrix.test }}/src
-      run: dotnet test --no-restore --configuration Release --report-trx
+      run: dotnet run --no-restore --configuration Release --report-trx
     
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
