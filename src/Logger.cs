@@ -141,6 +141,7 @@ public sealed class Logger : ILogger
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │
     // └─────────────────────────────────────────────────────────────────────────────┘
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We want to catch all exceptions that may occur when submitting log messages to log sinks, to prevent the logger from crashing.")]
     private async Task ProcessLogMessagesAsync(CancellationToken cancellationToken)
     {
         try
