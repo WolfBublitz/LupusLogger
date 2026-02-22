@@ -21,7 +21,7 @@ public sealed class TheAttachConsoleMethod
 
         // Assert
         string output = testConsole.Output;
-        output.Should().Contain("Log sink is attached.");
+        output.Should().Contain("Log sink is attached.", because: "the console log sink should have been attached and should have received the log message.");
     }
 
     [Test]
@@ -39,6 +39,6 @@ public sealed class TheAttachConsoleMethod
 
         // Assert
         string output = testConsole.Output;
-        output.Should().BeEmpty();
+        output.Should().BeEmpty(because: "the console log sink should have been detached before the log message was sent, so it should not have received the log message.");
     }
 }
