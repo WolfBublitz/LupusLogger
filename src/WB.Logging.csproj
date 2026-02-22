@@ -21,7 +21,6 @@
     <Authors>Wolf Bublitz</Authors>
     <Description>A simple logging library for .NET.</Description>
     <PackageTags>logger, logging, .NET</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/WolfBublitz/WB.Logging</PackageProjectUrl>
     <RepositoryUrl>https://github.com/WolfBublitz/WB.Logging</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -73,7 +72,6 @@
        │ LICENSE                                                              │
        ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
