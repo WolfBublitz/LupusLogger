@@ -12,7 +12,7 @@ public sealed class TheAttachConsoleMethod
     {
         // Arrange
         using TestConsole testConsole = new();
-        await using ILogger logger = new Logger("Test");
+        await using Logger logger = new("Test");
 
         // Act
         logger.AttachConsole();
@@ -27,7 +27,7 @@ public sealed class TheAttachConsoleMethod
     {
         // Arrange
         using TestConsole testConsole = new();
-        await using ILogger logger = new Logger("Test");
+        await using Logger logger = new("Test");
         IDisposable disposable = logger.AttachConsole();
 
         // Assert

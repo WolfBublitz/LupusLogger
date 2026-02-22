@@ -43,23 +43,20 @@ public interface ILogger : IAsyncDisposable
     /// Logs the <paramref name="message"/> at <see cref="LogLevel.Info"/>.
     /// </summary>
     /// <param name="message">The message to log.</param>
-    public void Info(object message)
-        => Log(LogLevel.Info, message);
+    public void Info(object message);
 
     /// <summary>
     /// Logs the <paramref name="message"/> at <see cref="LogLevel.Warning"/>.
     /// </summary>
     /// <param name="message">The message to log.</param>
-    public void Warning(object message)
-        => Log(LogLevel.Warning, message);
+    public void Warning(object message);
 
     /// <summary>
     /// Logs the <paramref name="message"/> at <see cref="LogLevel.Error"/>.
     /// </summary>
     /// <param name="message">The message to log.</param>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Common logging term.")]
-    public void Error(object message)
-        => Log(LogLevel.Error, message);
+    public void Error(object message);
 
     /// <summary>
     /// Flushes all pending log messages.

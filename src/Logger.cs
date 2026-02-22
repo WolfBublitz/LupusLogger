@@ -131,6 +131,18 @@ public sealed class Logger : ILogger
     }
 
     /// <inheritdoc/>
+    public void Info(object message)
+        => Log(LogLevel.Info, message);
+
+    /// <inheritdoc/>
+    public void Warning(object message)
+        => Log(LogLevel.Warning, message);
+
+    /// <inheritdoc/>
+    public void Error(object message)
+        => Log(LogLevel.Error, message);
+
+    /// <inheritdoc/>
     public IDisposable AttachLogSink(ILogSink logSink)
     {
         logSinks = logSinks.Add(logSink);

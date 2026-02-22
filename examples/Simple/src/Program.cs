@@ -1,7 +1,7 @@
 ﻿using System;
 using WB.Logging;
 
-await using ILogger logger = new Logger("SimpleLogger");
+await using Logger logger = new("SimpleLogger");
 
 logger.AttachConsole();
 
