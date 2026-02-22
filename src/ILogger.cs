@@ -11,7 +11,7 @@ namespace WB.Logging;
 public interface ILogger : IAsyncDisposable
 {
     // ┌─────────────────────────────────────────────────────────────────────────────┐
-    // │ Public Methods.                                                             │
+    // │ Public Properties.                                                          │
     // └─────────────────────────────────────────────────────────────────────────────┘
 
     /// <summary>
