@@ -1,11 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Target Framework -->
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ Target Framework                                                     │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
-  <!-- Package Info -->
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ Package Info.                                                        │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
     <Authors>Wolf Bublitz</Authors>
     <Description>A simple logging library for .NET.</Description>
@@ -17,9 +21,10 @@
     <Version>1.0.0-preview.1</Version>
   </PropertyGroup>
 
-  <!-- Build Options -->
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ Build Settings                                                       │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
-    <!-- Build settings --> 
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -30,38 +35,58 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- Analyzers -->
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ Analyzer Settings                                                    │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
   </PropertyGroup>
 
-  <!-- Documentation -->
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ Documentation                                                        │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ README                                                               │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
     <ReadmeFile>README.md</ReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ LICENSE                                                              │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
+  <PropertyGroup>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
-  <!-- SourceLink -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../LICENSE.txt" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ SourceLink                                                           │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
   <ItemGroup> 
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
-  <!-- Package References -->
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ Package References                                                   │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
   <ItemGroup>
     <PackageReference Include="R3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath=""/>
-    <None Include="$(MSBuildThisFileDirectory)../LICENSE.txt" Pack="true" PackagePath=""/>
   </ItemGroup>
 
 </Project>
