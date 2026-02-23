@@ -10,6 +10,14 @@ An easy-to-use non-blocking logging library for .NET applications, designed to p
 - **Extensible**: Create custom sinks and loggers to fit your specific requirements.
 - **Log anything**: Log messages of any type, including complex objects.
 
+## ⬇️ Log Sinks
+
+| Sink Type      | Description                                          |
+|----------------|------------------------------------------------------|
+| ConsoleLogSink | Logs messages to the console using `System.Console`. |
+
+**Note:** More log sinks will be added in the future, and you can also create your own custom sinks by implementing the `ILogSink` interface.
+
 ## 🚀 Example
 
 ```csharp
