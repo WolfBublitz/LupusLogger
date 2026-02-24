@@ -164,6 +164,8 @@ jobs:
 
       - name: "Create GitHub Release"
         uses: CSchoel/release-notes-from-changelog@v1
+        with:
+          begin-pattern: /^## ${RELEASE_VERSION}/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
