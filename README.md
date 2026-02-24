@@ -27,7 +27,7 @@ using WB.Logging;
 await using ILogger logger = new Logger("MyApp");
 
 // Step 2:  Attach a console sink to the logger
-logger.AttachConsole();
+using IDisposable attachment = logger.AttachConsole();
 
 // Step 3:  Log messages with different severity levels
 logger.LogInfo("This is an informational message.");
@@ -37,4 +37,5 @@ logger.LogError("This is an error message.");
 
 **Notes:**
 
-- Check the `await using` statement in the example, which ensures that the logger is properly disposed of after use, allowing it to flush any remaining log messages before the application exits.
+- Step 1: The `await using` statement in the example, ensures that the logger is properly disposed of after use, allowing it to flush any remaining log messages before the application exits.
+- Step 2: The `IDisposable` returned by `AttachConsole()` can be used to detach the console sink when it's no longer needed, preventing further log messages from being sent to the console.
