@@ -4,6 +4,9 @@ on:
   push:
     branches: 
       - "**"
+permissions: 
+  checks: write
+  pull-requests: write
 
 jobs:
   build:
