@@ -97,7 +97,7 @@
        │ Package References                                                   │
        ╰──────────────────────────────────────────────────────────────────────╯ -->
   <ItemGroup Condition="'$(SourceBuild)' != 'true'">
-    <ProjectReference Include="WB.Logging.Base" Version="[1.0.0-preview.2, 2)" />
+    <PackageReference Include="WB.Logging.Base" />
   </ItemGroup>
 
   <!-- ╭──────────────────────────────────────────────────────────────────────╮
