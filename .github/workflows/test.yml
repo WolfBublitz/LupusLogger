@@ -22,8 +22,7 @@ jobs:
       - id: collect
         name: 🔍 Discover Test Projects
         run: |
-          projects=$(find . -name "*Tests.csproj" \
-            | jq -R -s -c 'split("\n")[:-1] | map({filename: (. | split("/") | last | sub("\\.csproj$"; "")), path: .})')
+          projects=$(find . -name "*Tests.csproj" | jq -R -s -c 'split("\n")[:-1] | map({filename: (. | split("/") | last | sub("\\.csproj$"; "")), path: .})')
           echo "projects=$projects" >> $GITHUB_OUTPUT
 
   test:
