@@ -1,4 +1,4 @@
-name: Build
+name: 🏗️ Build
 
 on:
   workflow_call:
@@ -22,5 +22,4 @@ jobs:
     - name: Build
       working-directory: src
       run: |
-        chmod +x $GITHUB_WORKSPACE/.github/workflows/scripts/build-nuget.cs
-        dotnet run $GITHUB_WORKSPACE/.github/workflows/scripts/build-nuget.cs
+        dotnet build -c Release
