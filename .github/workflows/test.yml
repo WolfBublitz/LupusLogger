@@ -1,4 +1,4 @@
-name: Test
+name: 👩🏻‍🔬 Test
 
 on:
   workflow_call:
@@ -12,8 +12,25 @@ on:
         description: 'JSON array of test names'
 
 jobs:
-  test:
+  discover:
     runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.collect.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: collect
+        name: 🔍 Discover Test Projects
+        run: |
+          projects=$(find . -name "*Tests.csproj" | jq -R -s -c 'split("\n")[:-1]')
+          echo "projects=$projects" >> $GITHUB_OUTPUT
+
+  test:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.discover.outputs.projects) }}
     
     steps:
     - uses: actions/checkout@v4
@@ -27,13 +44,11 @@ jobs:
       working-directory: src
       run: dotnet restore
     
-    - name: 🔎 Test
-      working-directory: tests/${{ matrix.test }}/src
-      run: dotnet run --no-restore --configuration Release --report-trx
+    - name: 👩🏻‍🔬 Test
+      run: dotnet run ${{ matrix.project }} --no-restore --configuration Release --report-trx
     
     - name: 📢 Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: (!cancelled())
       with:
-        files: |
-          tests/${{ matrix.test }}/src/**/*.trx
+        files: tests/**/*.trx
