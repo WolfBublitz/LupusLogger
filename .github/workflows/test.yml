@@ -33,7 +33,8 @@ jobs:
         project: ${{ fromJson(needs.discover.outputs.projects) }}
     
     steps:
-    - uses: actions/checkout@v4
+    - name: 🗃️ Checkout
+      uses: actions/checkout@v4
 
     - name: 🔧 Setup .NET
       uses: actions/setup-dotnet@v4

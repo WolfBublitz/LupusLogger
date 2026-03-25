@@ -7,7 +7,7 @@ jobs:
   validate-version:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
+    - name: 🗃️ Checkout
       uses: actions/checkout@v4
 
     - name: Extract version from csproj
