@@ -44,8 +44,8 @@ jobs:
       working-directory: src
       run: dotnet restore
     
-    - name: 👩🏻‍🔬 Test
-      run: dotnet run ${{ matrix.project }} --no-restore --configuration Release --report-trx
+    - name: 👩🏻‍🔬 Run $(basename ${{ matrix.project }} .csproj)
+      run: dotnet run --project ${{ matrix.project }} --no-restore --configuration Release --report-trx
     
     - name: 📢 Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
