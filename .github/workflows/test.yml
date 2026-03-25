@@ -22,7 +22,7 @@ jobs:
       - id: collect
         name: 🔍 Discover Test Projects
         run: |
-          projects=$(find . -name "*Tests.csproj" | jq -R -s -c 'split("\n")[:-1]')
+          projects=$(find . -name "*Tests.csproj" jq -R -s -c 'split("\n")[:-1]| map({filename: (. | split("/") | last | sub("\\.csproj$"; "")), path: .})')
           echo "projects=$projects" >> $GITHUB_OUTPUT
 
   test:
@@ -44,8 +44,8 @@ jobs:
       working-directory: src
       run: dotnet restore
     
-    - name: 👩🏻‍🔬 Run $(basename ${{ matrix.project }} .csproj)
-      run: dotnet run --project ${{ matrix.project }} --no-restore --configuration Release --report-trx
+    - name: 👩🏻‍🔬 Run ${{ matrix.project.filename }}
+      run: dotnet run --project ${{ matrix.project.path }} --configuration Release --report-trx
     
     - name: 📢 Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
