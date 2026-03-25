@@ -14,30 +14,24 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      checks: write
-      pull-requests: write
-    strategy:
-      matrix:
-        test: ${{ fromJson(inputs.tests) }}
     
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Setup .NET
+
+    - name: 🔧 Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ inputs.dotnet-version }}
-    
-    - name: Restore dependencies
-      working-directory: tests/${{ matrix.test }}/src
+
+    - name: 🔄 Restore
+      working-directory: src
       run: dotnet restore
     
-    - name: Test
+    - name: 🔎 Test
       working-directory: tests/${{ matrix.test }}/src
       run: dotnet run --no-restore --configuration Release --report-trx
     
-    - name: Publish Test Results
+    - name: 📢 Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: (!cancelled())
       with:
