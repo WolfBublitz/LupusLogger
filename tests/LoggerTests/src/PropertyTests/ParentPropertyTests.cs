@@ -23,14 +23,11 @@ public sealed class TheParentProperty
     public async Task ShouldReturnTheParentPassedToTheInitializer()
     {
         // Arrange
-        Logger parentLogger = new("ParentLogger");
-        await using Logger logger = new("ChildLogger")
-        {
-            Parent = parentLogger
-        };
+        await using Logger parentLogger = new("ParentLogger");
+        ILogger childLogger = parentLogger.CreateChildLogger("ChildLogger");
 
         // Act
-        ILogger? parent = logger.Parent;
+        ILogger? parent = childLogger.Parent;
 
         // Assert
         parent.Should().BeSameAs(parentLogger);

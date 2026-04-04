@@ -32,10 +32,6 @@
   <PropertyGroup>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild> 
-    <Deterministic>true</Deterministic>
     <InvariantGlobalization>true</InvariantGlobalization>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -59,9 +55,47 @@
        │ Documentation                                                        │
        ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ Source Link.                                                         │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <EnableSourceLink>true</EnableSourceLink>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <EnableSourceLink>false</EnableSourceLink>
+    <PublishRepositoryUrl>false</PublishRepositoryUrl>
+    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+	     │ Deterministic Builds                                                 │
+	     ╰──────────────────────────────────────────────────────────────────────╯ -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <Deterministic>false</Deterministic>
+    <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ Debug Settings                                                       │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
+  <PropertyGroup>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <!-- ╭──────────────────────────────────────────────────────────────────────╮
@@ -72,7 +106,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath=""/>
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <!-- ╭──────────────────────────────────────────────────────────────────────╮
@@ -83,14 +117,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)../LICENSE.txt" Pack="true" PackagePath=""/>
-  </ItemGroup>
-
-  <!-- ╭──────────────────────────────────────────────────────────────────────╮
-       │ SourceLink                                                           │
-       ╰──────────────────────────────────────────────────────────────────────╯ -->
-  <ItemGroup> 
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    <None Include="$(MSBuildThisFileDirectory)../LICENSE.txt" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <!-- ╭──────────────────────────────────────────────────────────────────────╮
@@ -104,7 +131,7 @@
        │ Project References                                                   │
        ╰──────────────────────────────────────────────────────────────────────╯ -->
   <ItemGroup Condition="'$(SourceBuild)' == 'true'">
-    <ProjectReference Include="$(DependencyDir)WB.Logging.Base/src/WB.Logging.Base.csproj" />
+    <ProjectReference Include="$(LocalProjectDependencies)WB.Logging.Base/src/WB.Logging.Base.csproj" />
   </ItemGroup>
 
 </Project>

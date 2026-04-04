@@ -7,10 +7,10 @@ namespace LoggerTests.PropertyTests.MinimumLogLevelPropertyTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<LogMessage> LogMessage = [];
+    public readonly List<ILogMessage<object>> LogMessage = [];
 
-    public void Submit(LogMessage logMessage)
-        => LogMessage.Add(logMessage);
+    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
+        => LogMessage.Add((ILogMessage<object>)logMessage);
 }
 
 public sealed class TheMinimumLogLevelProperty
@@ -22,7 +22,7 @@ public sealed class TheMinimumLogLevelProperty
         Logger logger = new("TestLogger");
 
         // Act
-        LogLevel minimumLogLevel = logger.MinimumLogLevel;
+        LogLevel? minimumLogLevel = logger.MinimumLogLevel;
 
         // Assert
         minimumLogLevel.Should().Be(LogLevel.Info, because: "the default minimum log level should be LogLevel.Info.");
@@ -51,5 +51,46 @@ public sealed class TheMinimumLogLevelProperty
         // Assert
         testLogSink.LogMessage.Should().HaveCount(expectedLogCount, because: "only messages with a LogLevel greater than or equal to the MinimumLogLevel should be logged.");
         testLogSink.LogMessage.Should().OnlyContain(logMessage => logMessage.LogLevel >= minimumLogLevel, because: "only messages with a LogLevel greater than or equal to the MinimumLogLevel should be logged.");
+    }
+
+    [Test]
+    [Arguments(LogLevel.Info)]
+    [Arguments(LogLevel.Warning)]
+    [Arguments(LogLevel.Error)]
+    public void ShouldInheritMinimumLogLevelFromParentLogger(LogLevel logLevel)
+    {
+        // Arrange
+        Logger logger = new("Logger")
+        {
+            MinimumLogLevel = logLevel
+        };
+        ILogger childLogger = logger.CreateChildLogger("ChildLogger");
+
+        // Act
+        LogLevel? childMinimumLogLevel = childLogger.MinimumLogLevel;
+
+        // Assert
+        childMinimumLogLevel.Should().Be(logger.MinimumLogLevel, because: "the child logger should inherit the minimum log level from the parent logger.");
+    }
+
+    [Test]
+    [Arguments(LogLevel.Warning)]
+    [Arguments(LogLevel.Error)]
+    public void ShouldOverrideMinimumLogLevelFromParentLogger(LogLevel logLevel)
+    {
+        // Arrange
+        LogLevel childLogLevel = LogLevel.Info;
+        Logger logger = new("Logger")
+        {
+            MinimumLogLevel = logLevel
+        };
+        ILogger childLogger = logger.CreateChildLogger("ChildLogger");
+        childLogger.MinimumLogLevel = childLogLevel;
+
+        // Act
+        LogLevel? childMinimumLogLevel = childLogger.MinimumLogLevel;
+
+        // Assert
+        childMinimumLogLevel.Should().Be(childLogLevel, because: "the child logger should override the minimum log level from the parent logger.");
     }
 }

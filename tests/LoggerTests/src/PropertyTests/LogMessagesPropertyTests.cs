@@ -7,10 +7,10 @@ namespace LoggerTests.PropertyTests.LogMessagesPropertyTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<LogMessage> LogMessage = [];
+    public readonly List<ILogMessage<object>> LogMessage = [];
 
-    public void Submit(LogMessage logMessage)
-        => LogMessage.Add(logMessage);
+    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
+        => LogMessage.Add((ILogMessage<object>)logMessage);
 }
 
 public sealed class TheLogMessagesProperty
@@ -28,6 +28,6 @@ public sealed class TheLogMessagesProperty
         await logger.FlushAsync().ConfigureAwait(false);
 
         // Assert
-        testLogSink.LogMessage.Should().ContainSingle(logMessage => logMessage.Message.ToString() == "Hello, world.");
+        testLogSink.LogMessage.Should().ContainSingle(logMessage => logMessage.Payload != null && logMessage.Payload.ToString() == "Hello, world.");
     }
 }

@@ -1,48 +1,74 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace WB.Logging;
 
 /// <inheritdoc/>
-public sealed class Logger : ILogger
+/// <summary>
+/// Initializes a new instance of the <see cref="Logger"/> class.
+/// </summary>
+/// <param name="name">The name of the logger.</param>
+public sealed class Logger(string name) : ILogger
 {
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Fields                                                              │
     // └─────────────────────────────────────────────────────────────────────────────┘
-    private readonly Channel<LogMessage> channel;
+    private readonly Logger? parent;
 
-    private readonly Task task;
+    private readonly ActionBlock<Func<Task>> logMessageQueue = new(
+            logMessageAction =>
+            {
+                logMessageAction();
+            });
 
-    private readonly CancellationTokenSource cancellationTokenSource = new();
+    private readonly ConcurrentBag<ILogger> childLoggers = [];
 
-    private ImmutableList<ILogSink> logSinks = [];
+    private readonly ConcurrentBag<ILogSink> logSinks = [];
+
+    private int isDisposed;
+
+    // ┌─────────────────────────────────────────────────────────────────────────────┐
+    // │ Private Constructors                                                        │
+    // └─────────────────────────────────────────────────────────────────────────────┘
+    private Logger(string name, Logger parent)
+        : this(name)
+    {
+        this.parent = parent;
+        MinimumLogLevel = parent.MinimumLogLevel;
+    }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Public Properties                                                           │
     // └─────────────────────────────────────────────────────────────────────────────┘
 
+    /// <summary>
+    /// Gets a value indicating whether the logger has been disposed.
+    /// </summary>
+    public bool IsDisposed => Interlocked.CompareExchange(ref isDisposed, 0, 0) == 1;
+
     /// <inheritdoc/>
     public IReadOnlyList<ILogSink> LogSinks
-        => logSinks;
+        => [.. logSinks];
 
-    /// <summary>
-    /// Gets the name of the logger.
-    /// </summary>
-    public string Name { get; }
+    /// <inheritdoc/>
+    public string Name { get; } = name;
 
-    /// <summary>
-    /// Gets or sets the minimum <see cref="LogLevel"/> to log.
-    /// </summary>
+    /// <inheritdoc/>
     /// <remarks>
-    /// Messages with a <see cref="LogLevel"/> less severe than this level will be ignored.
-    /// The default is <see cref="LogLevel.Info"/>.
+    /// Log messages with a <see cref="LogLevel"/> less severe than the <see cref="MinimumLogLevel"/>
+    /// will be ignored and not submitted to log sinks or the parent logger.
+    /// If <see cref="MinimumLogLevel"/> is <c>null</c>, the minimum log level of the parent logger will be used. If there is no parent logger, all log messages will be logged regardless of their log level.
     /// </remarks>
-    public LogLevel MinimumLogLevel { get; init; } = LogLevel.Info;
+    public LogLevel? MinimumLogLevel
+    {
+        get => field ?? parent?.MinimumLogLevel;
+        set;
+    } = LogLevel.Info;
 
     /// <summary>
     /// Gets or sets the parent <see cref="ILogger"/>.
@@ -50,33 +76,12 @@ public sealed class Logger : ILogger
     /// <remarks>
     /// If set, log messages will also be forwarded to the parent logger.
     /// </remarks>
-    public ILogger? Parent { get; init; }
+    public ILogger? Parent => parent;
 
     /// <summary>
     /// Gets or sets the <see cref="ITimestampProvider"/> to use for log messages.
     /// </summary>
     public ITimestampProvider TimestampProvider { get; init; } = new LocalTimeTimestampProvider();
-
-    // ┌─────────────────────────────────────────────────────────────────────────────┐
-    // │ Public Constructors                                                         │
-    // └─────────────────────────────────────────────────────────────────────────────┘
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Logger"/> class.
-    /// </summary>
-    /// <param name="name">The name of the logger.</param>
-    public Logger(string name)
-    {
-        Name = name;
-
-        channel = Channel.CreateUnbounded<LogMessage>(new UnboundedChannelOptions
-        {
-            SingleReader = true,
-            SingleWriter = false
-        });
-
-        task = ProcessLogMessagesAsync(cancellationTokenSource.Token);
-    }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Public Methods                                                              │
@@ -85,10 +90,20 @@ public sealed class Logger : ILogger
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref isDisposed, 1) == 1)
+        {
+            return;
+        }
+
         await FlushAsync().ConfigureAwait(false);
-        await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
-        await task.ConfigureAwait(false);
-        cancellationTokenSource.Dispose();
+
+        logMessageQueue.Complete();
+        await logMessageQueue.Completion.ConfigureAwait(false);
+
+        foreach (ILogger childLogger in childLoggers)
+        {
+            await childLogger.DisposeAsync().ConfigureAwait(false);
+        }
 
         foreach (ILogSink logSink in logSinks)
         {
@@ -116,11 +131,16 @@ public sealed class Logger : ILogger
     }
 
     /// <inheritdoc/>
-    public void Log(LogLevel? logLevel, object message)
+    public void Log<TPayload>(LogLevel? logLevel, TPayload payload)
     {
-        LogMessage logMessage = new(TimestampProvider.CurrentTimestamp, [Name], logLevel, message);
+        LogMessage<TPayload> logMessage = new()
+        {
+            Timestamp = TimestampProvider.CurrentTimestamp,
+            LogLevel = logLevel,
+            Payload = payload
+        };
 
-        _ = channel.Writer.TryWrite(logMessage);
+        Log(logMessage);
     }
 
     /// <inheritdoc/>
@@ -149,50 +169,57 @@ public sealed class Logger : ILogger
     /// <inheritdoc/>
     public IDisposable AttachLogSink(ILogSink logSink)
     {
-        logSinks = logSinks.Add(logSink);
+        logSinks.Add(logSink);
 
-        return new DelegateDisposable(() => logSinks = logSinks.Remove(logSink));
+        return new DelegateDisposable(() => logSinks.TryTake(out _));
+    }
+
+    /// <inheritdoc/>
+    public ILogger CreateChildLogger(string name)
+    {
+        Logger childLogger = new(name, this);
+
+        childLoggers.Add(childLogger);
+
+        return childLogger;
     }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │
     // └─────────────────────────────────────────────────────────────────────────────┘
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We want to catch all exceptions that may occur when submitting log messages to log sinks, to prevent the logger from crashing.")]
-    private async Task ProcessLogMessagesAsync(CancellationToken cancellationToken)
+    private void Log<TPayload>(LogMessage<TPayload> logMessage)
     {
-        try
-        {
-            await foreach (LogMessage logMessage in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
-            {
-                if (logMessage.Message is FlushItem flushItem)
-                {
-                    flushItem.Complete();
-                }
-                else
-                {
-                    for (int i = 0; i < logSinks.Count; i++)
-                    {
-                        // The log message is only submitted to log sinks if its log level is greater than or equal to the minimum log level.
-                        if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
-                        {
-                            continue;
-                        }
+        logMessage.AddSender(Name);
 
-                        try
-                        {
-                            logSinks[i].Submit(logMessage);
-                        }
-                        catch (Exception exception)
-                        {
-                            await Console.Error.WriteLineAsync($"Error submitting log message to log sink: {exception}").ConfigureAwait(false);
-                        }
+        logMessageQueue.Post(async () =>
+        {
+            if (logMessage.Payload is FlushItem flushItem)
+            {
+                flushItem.Complete();
+            }
+            else
+            {
+                if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
+                {
+                    return;
+                }
+
+                parent?.Log(logMessage);
+
+                foreach (ILogSink logSink in logSinks)
+                {
+#pragma warning disable CA1031 // Do not catch general exception types
+                    try
+                    {
+                        logSink.Submit(logMessage);
                     }
+                    catch (Exception exception)
+                    {
+                        await Console.Error.WriteLineAsync($"Error submitting log message to log sink: {exception}").ConfigureAwait(false);
+                    }
+#pragma warning restore CA1031 // Do not catch general exception types
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // Ignore
-        }
+        });
     }
 }

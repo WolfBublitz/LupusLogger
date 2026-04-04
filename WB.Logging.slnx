@@ -4,11 +4,6 @@
   <Folder Name="/deps/WB.Logging.Base/src/">
     <Project Path="deps/WB.Logging.Base/src/WB.Logging.Base.csproj" />
   </Folder>
-  <Folder Name="/examples/" />
-  <Folder Name="/examples/Simple/" />
-  <Folder Name="/examples/Simple/src/">
-    <Project Path="examples/Simple/src/Simple.csproj" />
-  </Folder>
   <Folder Name="/src/">
     <Project Path="src/WB.Logging.csproj" />
   </Folder>
