@@ -24,6 +24,11 @@ public sealed class Logger(string name) : ILogger
             logMessageAction =>
             {
                 logMessageAction();
+            }, new ExecutionDataflowBlockOptions
+            {
+                EnsureOrdered = true,
+                MaxDegreeOfParallelism = 1,
+                BoundedCapacity = DataflowBlockOptions.Unbounded
             });
 
     private readonly ConcurrentBag<ILogger> childLoggers = [];
