@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -24,11 +23,6 @@ public sealed class Logger(string name) : ILogger
             logMessageAction =>
             {
                 logMessageAction();
-            }, new ExecutionDataflowBlockOptions
-            {
-                EnsureOrdered = true,
-                MaxDegreeOfParallelism = 1,
-                BoundedCapacity = DataflowBlockOptions.Unbounded
             });
 
     private readonly ConcurrentBag<ILogger> childLoggers = [];
@@ -100,8 +94,6 @@ public sealed class Logger(string name) : ILogger
             return;
         }
 
-        await FlushAsync().ConfigureAwait(false);
-
         logMessageQueue.Complete();
         await logMessageQueue.Completion.ConfigureAwait(false);
 
@@ -133,6 +125,11 @@ public sealed class Logger(string name) : ILogger
         Log(null, flushItem);
 
         await flushItem.Task.ConfigureAwait(false);
+
+        if (Parent is not null)
+        {
+            await Parent.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <inheritdoc/>
@@ -147,29 +144,6 @@ public sealed class Logger(string name) : ILogger
 
         Log(logMessage);
     }
-
-    /// <inheritdoc/>
-    public void Log(Exception exception)
-    {
-        ArgumentNullException.ThrowIfNull(exception);
-
-        Log(null, exception);
-    }
-
-    /// <inheritdoc/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Info(object message)
-        => Log(LogLevel.Info, message);
-
-    /// <inheritdoc/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Warning(object message)
-        => Log(LogLevel.Warning, message);
-
-    /// <inheritdoc/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Error(object message)
-        => Log(LogLevel.Error, message);
 
     /// <inheritdoc/>
     public IDisposable AttachLogSink(ILogSink logSink)
@@ -196,6 +170,13 @@ public sealed class Logger(string name) : ILogger
     {
         logMessage.AddSender(Name);
 
+        if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
+        {
+            return;
+        }
+
+        parent?.Log(logMessage);
+
         logMessageQueue.Post(async () =>
         {
             if (logMessage.Payload is FlushItem flushItem)
@@ -204,13 +185,6 @@ public sealed class Logger(string name) : ILogger
             }
             else
             {
-                if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
-                {
-                    return;
-                }
-
-                parent?.Log(logMessage);
-
                 foreach (ILogSink logSink in logSinks)
                 {
 #pragma warning disable CA1031 // Do not catch general exception types

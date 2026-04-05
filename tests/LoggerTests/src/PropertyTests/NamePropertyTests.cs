@@ -46,7 +46,7 @@ public sealed class TheNameProperty
 
         // Assert
         logMessage.Senders.Should().HaveCount(2, because: "the log message should have two senders: the logger and its child logger.");
-        logMessage.Senders[0].Should().Be(loggerName, because: "the logger's name should be the first sender in the log message's senders.");
-        logMessage.Senders[1].Should().Be("ChildLogger", because: "the child logger's name should be the second sender in the log message's senders.");
+        logMessage.Senders[0].Should().Be("ChildLogger", because: "the child logger's name should be the second sender in the log message's senders.");
+        logMessage.Senders[1].Should().Be(loggerName, because: "the logger's name should be the first sender in the log message's senders.");
     }
 }
