@@ -37,31 +37,6 @@
   </PropertyGroup>
 
   <!-- ╭──────────────────────────────────────────────────────────────────────╮
-       │ LICENSE                                                              │
-       ╰──────────────────────────────────────────────────────────────────────╯ -->
-  <PropertyGroup>
-    <PackageReferencesDir>$(MSBuildThisFileDirectory)deps/</PackageReferencesDir>
-  </PropertyGroup>
-
-  <!-- ╭──────────────────────────────────────────────────────────────────────╮
-       │ README                                                               │
-       ╰──────────────────────────────────────────────────────────────────────╯ -->
-  <PropertyGroup>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="" />
-  </ItemGroup>
-
-  <!-- ╭──────────────────────────────────────────────────────────────────────╮
-       │ LICENSE                                                              │
-       ╰──────────────────────────────────────────────────────────────────────╯ -->
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)LICENSE.txt" Pack="true" PackagePath="" />
-  </ItemGroup>
-
-  <!-- ╭──────────────────────────────────────────────────────────────────────╮
        │ Local Project Directory                                                              │
        ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
