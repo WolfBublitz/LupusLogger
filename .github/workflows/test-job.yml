@@ -1,0 +1,77 @@
+on:
+  workflow_call:
+    inputs: 
+      dotnet-version:
+        required: false 
+        type: string
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.discover.outputs.matrix }}
+    steps:
+      - name: 🗃️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: 🔎 Find all .NET test projects
+        id: discover
+        run: |
+          projects=$(find . -name "*Tests.csproj" -o -name "*.Test.csproj" -o -name "*.Tests.csproj")
+          arr=()
+          for project in $projects; do
+            filename=$(basename "$project")
+            name="${filename%.csproj}"   # remove .csproj
+            workingDirectory=$(dirname "$project") 
+            items+=("{\"name\":\"$name\",\"path\":\"$project\",\"workingDirectory\":\"$workingDirectory\"}")
+          done
+
+          json="[$(IFS=,; echo "${items[*]}")]"
+          
+          echo "Found test projects: $json"
+          echo "matrix={\"project\":$json}" >> $GITHUB_OUTPUT
+
+  run:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+
+    name: ${{ matrix.project.name }}
+
+    steps:
+      - name: 🗃️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: 🔄 Restore
+        working-directory: "${{ matrix.project.workingDirectory }}"
+        run: dotnet restore
+
+      - name: 🏃‍♂️‍➡️ Run Test
+        working-directory: "${{ matrix.project.workingDirectory }}"
+        run: |
+            dotnet run \
+              --configuration Release \
+              --no-restore \
+              /p:SolutionDir="${{ github.workspace }}/" \
+              -- \
+              --report-trx \
+              --report-trx-filename ${{ matrix.project.name }}.Results.trx \
+              --results-directory ${{ matrix.project.workingDirectory }}
+
+      - name: 📤 Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.project.name }} Test Results
+          path: "${{ matrix.project.workingDirectory }}/**/${{ matrix.project.name }}.Results.trx"
