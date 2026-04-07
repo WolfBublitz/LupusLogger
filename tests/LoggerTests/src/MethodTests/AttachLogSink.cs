@@ -1,10 +1,30 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AwesomeAssertions;
-using LoggerTests.MethodTests.CreateChildLoggerMethodTests;
 using WB.Logging;
 
 namespace LoggerTests.MethodTests.AttachLogSinkMethodTests;
+
+internal sealed class TestLogSink : ILogSink
+{
+    public readonly List<ILogMessage<object>> ReceivedMessages = [];
+
+    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
+        => ReceivedMessages.Add((ILogMessage<object>)logMessage);
+}
+
+internal sealed class TestAsyncLogSink : IAsyncLogSink
+{
+    public readonly List<ILogMessage<object>> ReceivedMessages = [];
+
+    public ValueTask SubmitAsync<TPayload>(ILogMessage<TPayload> logMessage)
+    {
+        ReceivedMessages.Add((ILogMessage<object>)logMessage);
+
+        return ValueTask.CompletedTask;
+    }
+}
 
 public sealed class TheAttachLogSinkMethod
 {
@@ -25,7 +45,23 @@ public sealed class TheAttachLogSinkMethod
     }
 
     [Test]
-    public async Task ShouldReturnAnDisposable()
+    public async Task ShouldAttachAnAsyncLogSink()
+    {
+        // Arrange
+        string loggerName = "TestLogger";
+        TestAsyncLogSink testAsyncLogSink = new();
+        await using Logger logger = new(loggerName);
+
+        // Act
+        logger.AttachLogSink(testAsyncLogSink);
+
+        // Assert
+        logger.AsyncLogSinks.Should().ContainSingle()
+            .Which.Should().BeSameAs(testAsyncLogSink, because: "AttachLogSink should add the provided log sink to the list of attached log sinks.");
+    }
+
+    [Test]
+    public async Task ShouldReturnADisposableForLogSink()
     {
         // Arrange
         string loggerName = "TestLogger";
@@ -34,6 +70,21 @@ public sealed class TheAttachLogSinkMethod
 
         // Act
         IDisposable disposable = logger.AttachLogSink(testLogSink);
+
+        // Assert
+        disposable.Should().NotBeNull(because: "AttachLogSink should return a non-null IDisposable that can be used to detach the log sink.");
+    }
+
+    [Test]
+    public async Task ShouldReturnADisposableForAsyncLogSink()
+    {
+        // Arrange
+        string loggerName = "TestLogger";
+        TestAsyncLogSink testAsyncLogSink = new();
+        await using Logger logger = new(loggerName);
+
+        // Act
+        IDisposable disposable = logger.AttachLogSink(testAsyncLogSink);
 
         // Assert
         disposable.Should().NotBeNull(because: "AttachLogSink should return a non-null IDisposable that can be used to detach the log sink.");
@@ -57,5 +108,25 @@ public sealed class TheAttachLogSinkMethod
 
         // Assert
         logger.LogSinks.Should().BeEmpty(because: "disposing the returned IDisposable should detach the log sink.");
+    }
+
+    [Test]
+    public async Task ShouldReturnAnDisposableThatDetachesTheAsyncLogSinkWhenDisposed()
+    {
+        // Arrange
+        string loggerName = "TestLogger";
+        TestAsyncLogSink testAsyncLogSink = new();
+        await using Logger logger = new(loggerName);
+        IDisposable disposable = logger.AttachLogSink(testAsyncLogSink);
+
+        // Assert
+        logger.AsyncLogSinks.Should().ContainSingle()
+            .Which.Should().BeSameAs(testAsyncLogSink, because: "AttachLogSink should add the provided log sink to the list of attached log sinks.");
+
+        // Act
+        disposable.Dispose();
+
+        // Assert
+        logger.AsyncLogSinks.Should().BeEmpty(because: "disposing the returned IDisposable should detach the log sink.");
     }
 }

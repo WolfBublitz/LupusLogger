@@ -63,6 +63,10 @@ public sealed class Logger(string name) : ILogger
         => [.. logSinks];
 
     /// <inheritdoc/>
+    public IReadOnlyList<IAsyncLogSink> AsyncLogSinks
+        => [.. asyncLogSinks];
+
+    /// <inheritdoc/>
     public string Name { get; } = name;
 
     /// <inheritdoc/>
