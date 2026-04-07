@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -20,14 +21,21 @@ public sealed class Logger(string name) : ILogger
     private readonly Logger? parent;
 
     private readonly ActionBlock<Func<Task>> logMessageQueue = new(
-            logMessageAction =>
+            async logMessageAction =>
             {
-                logMessageAction();
+                await logMessageAction().ConfigureAwait(false);
+            },
+            new ExecutionDataflowBlockOptions
+            {
+                MaxDegreeOfParallelism = 1,
+                EnsureOrdered = true
             });
 
     private readonly ConcurrentBag<ILogger> childLoggers = [];
 
     private readonly ConcurrentBag<ILogSink> logSinks = [];
+
+    private readonly ConcurrentBag<IAsyncLogSink> asyncLogSinks = [];
 
     private int isDisposed;
 
@@ -113,6 +121,18 @@ public sealed class Logger(string name) : ILogger
                 disposableLogSink.Dispose();
             }
         }
+
+        foreach (IAsyncLogSink asyncLogSink in asyncLogSinks)
+        {
+            if (asyncLogSink is IDisposable disposableLogSink)
+            {
+                disposableLogSink.Dispose();
+            }
+            else if (asyncLogSink is IAsyncDisposable asyncDisposableLogSink)
+            {
+                await asyncDisposableLogSink.DisposeAsync().ConfigureAwait(false);
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -154,6 +174,14 @@ public sealed class Logger(string name) : ILogger
     }
 
     /// <inheritdoc/>
+    public IDisposable AttachLogSink(IAsyncLogSink logSink)
+    {
+        asyncLogSinks.Add(logSink);
+
+        return new DelegateDisposable(() => asyncLogSinks.TryTake(out _));
+    }
+
+    /// <inheritdoc/>
     public ILogger CreateChildLogger(string name)
     {
         Logger childLogger = new(name, this);
@@ -177,27 +205,22 @@ public sealed class Logger(string name) : ILogger
 
         parent?.Log(logMessage);
 
-        logMessageQueue.Post(async () =>
+        logMessageQueue.Post(() =>
         {
             if (logMessage.Payload is FlushItem flushItem)
             {
                 flushItem.Complete();
+
+                return Task.CompletedTask;
             }
             else
             {
-                foreach (ILogSink logSink in logSinks)
-                {
-#pragma warning disable CA1031 // Do not catch general exception types
-                    try
-                    {
-                        logSink.Submit(logMessage);
-                    }
-                    catch (Exception exception)
-                    {
-                        await Console.Error.WriteLineAsync($"Error submitting log message to log sink: {exception}").ConfigureAwait(false);
-                    }
-#pragma warning restore CA1031 // Do not catch general exception types
-                }
+                Task[] submitTasks = [
+                    .. logSinks.Select(logSink => logSink.SubmitSafeAsync(logMessage)),
+                    .. asyncLogSinks.Select(asyncLogSink => asyncLogSink.SubmitSafeAsync(logMessage))
+                ];
+
+                return Task.WhenAll(submitTasks);
             }
         });
     }
