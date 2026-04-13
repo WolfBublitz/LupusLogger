@@ -4,32 +4,37 @@ on:
   workflow_call:
     inputs: 
       dotnet-version:
-        required: false 
+        required: true 
         type: string
 
 jobs:
   publish-nuget:
     runs-on: ubuntu-latest
     steps:        
+      - name: Inputs
+        run: |
+          echo "dotnet-version = ${{ inputs.dotnet-version }}"
+
       - name: ✅ Ensure NuGet API key is present
         run: |
           if [ -z "${{ secrets.NUGET_API_KEY }}" ]; then
             echo "NUGET_API_KEY secret is missing. Did you forget 'secrets: inherit' in the caller workflow?"
             exit 1
           fi
-  
-      - name: ⬇️ Download package artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: nuget-package
-          path: .
 
       - name: 🔧 Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ inputs.dotnet-version }}
+  
+      - name: ⬇️ Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: src
 
       - name: 🚚 Publishing NuGet
+        working-directory: src
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push *.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ${{ github.event.repository.name }}.*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
