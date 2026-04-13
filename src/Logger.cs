@@ -178,16 +178,11 @@ public sealed class Logger(string name) : ILogger
     }
 
     /// <inheritdoc/>
-    public IAsyncDisposable AttachLogSink(IAsyncLogSink logSink)
+    public IDisposable AttachLogSink(IAsyncLogSink logSink)
     {
         asyncLogSinks.Add(logSink);
 
-        return new AsyncDelegateDisposable(() =>
-        {
-            asyncLogSinks.TryTake(out _);
-
-            return ValueTask.CompletedTask;
-        });
+        return new DelegateDisposable(() => asyncLogSinks.TryTake(out _));
     }
 
     /// <inheritdoc/>
