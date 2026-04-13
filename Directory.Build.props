@@ -40,7 +40,7 @@
        │ Local Project Directory                                                              │
        ╰──────────────────────────────────────────────────────────────────────╯ -->
   <PropertyGroup>
-    <LocalProjectDependencies>$(MSBuildThisFileDirectory)deps/</LocalProjectDependencies>
+    <PathToLocalProjects>$(MSBuildThisFileDirectory)deps/</PathToLocalProjects>
   </PropertyGroup>
 
 </Project>

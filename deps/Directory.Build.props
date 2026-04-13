@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <PathToLocalProjects>$(MSBuildThisFileDirectory)</PathToLocalProjects>
+  </PropertyGroup>
+</Project>
