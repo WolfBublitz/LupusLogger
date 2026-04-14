@@ -1,9 +1,4 @@
 <Solution>
-  <Folder Name="/deps/" />
-  <Folder Name="/deps/WB.Logging.Base/" />
-  <Folder Name="/deps/WB.Logging.Base/src/">
-    <Project Path="deps/WB.Logging.Base/src/WB.Logging.Base.csproj" />
-  </Folder>
   <Folder Name="/src/">
     <Project Path="src/WB.Logging.csproj" />
   </Folder>
