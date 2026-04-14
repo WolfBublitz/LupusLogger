@@ -36,11 +36,4 @@
     <WarningsAsErrors>nullable</WarningsAsErrors>
   </PropertyGroup>
 
-  <!-- ╭──────────────────────────────────────────────────────────────────────╮
-       │ Local Project Directory                                                              │
-       ╰──────────────────────────────────────────────────────────────────────╯ -->
-  <PropertyGroup>
-    <PathToLocalProjects>$(MSBuildThisFileDirectory)deps/</PathToLocalProjects>
-  </PropertyGroup>
-
 </Project>

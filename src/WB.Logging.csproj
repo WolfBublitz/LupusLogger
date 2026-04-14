@@ -109,14 +109,14 @@
   <!-- ╭──────────────────────────────────────────────────────────────────────╮
        │ Package References                                                   │
        ╰──────────────────────────────────────────────────────────────────────╯ -->
-  <ItemGroup Condition="'$(UseLocalProjects)' != 'true'">
+  <ItemGroup Condition="'$(PathToLocalProjects)' == ''">
     <PackageReference Include="WB.Logging.Base" />
   </ItemGroup>
 
   <!-- ╭──────────────────────────────────────────────────────────────────────╮
        │ Project References                                                   │
        ╰──────────────────────────────────────────────────────────────────────╯ -->
-  <ItemGroup Condition="'$(UseLocalProjects)' == 'true'">
+  <ItemGroup Condition="'$(PathToLocalProjects)' != ''">
     <ProjectReference Include="$(PathToLocalProjects)WB.Logging.Base/src/WB.Logging.Base.csproj" />
   </ItemGroup>
 
