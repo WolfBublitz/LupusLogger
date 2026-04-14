@@ -25,18 +25,10 @@ jobs:
       use-local-projects: false
       create-nuget-package: true
 
-  build-against-sources:
-    name: 🏗️ Build Against Sources
-    uses: ./.github/workflows/build-job.yml
-    with:
-      dotnet-version: "10.0.x"
-      use-local-projects: true
-      create-nuget-package: false
-
   test:
     name: ✅ Run Tests
     uses: ./.github/workflows/test-job.yml
-    needs: [build, build-against-sources]
+    needs: [build]
     with:
       dotnet-version: "10.0.x"
   
