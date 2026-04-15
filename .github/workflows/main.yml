@@ -12,10 +12,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  validate-version:
-    name: 🧐 Validate Version
-    uses: ./.github/workflows/validate-version-job.yml
-    if: startsWith(github.ref, 'refs/tags/')
 
   build:
     name: 🏗️ Build Nuget Package
@@ -35,7 +31,7 @@ jobs:
   publish-nuget:
     name: 📦 Publish Nuget Package
     uses: ./.github/workflows/publish-nuget-job.yml
-    needs: [validate-version, test]
+    needs: [test]
     if: startsWith(github.ref, 'refs/tags/')
     with:
       dotnet-version: "10.0.x"
