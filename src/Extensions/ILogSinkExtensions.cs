@@ -22,6 +22,7 @@ internal static class ILogSinkExtensions
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We want to catch all exceptions to prevent logging failures from crashing the application.")]
     internal static Task SubmitSafeAsync<TPayload>(this ILogSink @this, ILogMessage<TPayload> logMessage)
+        where TPayload : notnull
     {
         return Task.Run(() =>
         {

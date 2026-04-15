@@ -158,6 +158,7 @@ public sealed class Logger(string name) : ILogger
 
     /// <inheritdoc/>
     public void Log<TPayload>(LogLevel? logLevel, TPayload payload)
+        where TPayload : notnull
     {
         LogMessage<TPayload> logMessage = new()
         {
@@ -199,6 +200,7 @@ public sealed class Logger(string name) : ILogger
     // │ Private Methods                                                             │
     // └─────────────────────────────────────────────────────────────────────────────┘
     private void Log<TPayload>(LogMessage<TPayload> logMessage)
+        where TPayload : notnull
     {
         logMessage.AddSender(Name);
 

@@ -13,6 +13,7 @@ internal sealed class TestLogSink : ILogSink, IDisposable
         => IsDisposed = true;
 
     public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
+        where TPayload : notnull
         => throw new NotImplementedException("This test log sink should not be used to submit log messages.");
 }
 
@@ -27,6 +28,7 @@ internal sealed class AsyncTestLogSink : ILogSink, IAsyncDisposable
     }
 
     public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
+        where TPayload : notnull
         => throw new NotImplementedException("This test log sink should not be used to submit log messages.");
 }
 
