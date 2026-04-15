@@ -5,6 +5,7 @@ namespace WB.Logging;
 
 /// <inheritdoc cref="ILogMessage{TPayload}"/>
 internal readonly record struct LogMessage<TPayload> : ILogMessage<TPayload>
+    where TPayload : notnull
 {
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Fields                                                              │
@@ -30,13 +31,13 @@ internal readonly record struct LogMessage<TPayload> : ILogMessage<TPayload>
     public required DateTimeOffset Timestamp { get; init; }
 
     /// <inheritdoc/>
+    public required TPayload Payload { get; init; }
+
+    /// <inheritdoc/>
     public IReadOnlyList<string> Senders => senders;
 
     /// <inheritdoc/>
     public LogLevel? LogLevel { get; init; }
-
-    /// <inheritdoc/>
-    public TPayload? Payload { get; init; }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Internal Methods.                                                           │

@@ -11,6 +11,7 @@ internal sealed class TestLogSink : ILogSink
     public readonly List<ILogMessage<object>> LogMessages = [];
 
     public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
+        where TPayload : notnull
         => LogMessages.Add((ILogMessage<object>)logMessage);
 }
 
