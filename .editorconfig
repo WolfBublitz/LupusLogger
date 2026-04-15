@@ -3,38 +3,18 @@ root = true
 
 # Apply to all C# files
 [*.cs]
+indent_style = space
+indent_size = 4
 
-max_line_length = 80
+# New line preferences
+end_of_line = crlf
+insert_final_newline = true
 
-# Treat warnings as errors
-dotnet_analyzer_diagnostic.severity = error
+# Apply to all XML files
+[*.xml]
+indent_style = space
+indent_size = 2
 
-# Enable recommended rules
-dotnet_analyzer_diagnostic.category-Style.severity = warning
-dotnet_analyzer_diagnostic.category-Design.severity = warning
-dotnet_analyzer_diagnostic.category-Documentation.severity = warning
-dotnet_analyzer_diagnostic.category-Naming.severity = warning
-dotnet_analyzer_diagnostic.category-Performance.severity = warning
-dotnet_analyzer_diagnostic.category-Reliability.severity = warning
-dotnet_analyzer_diagnostic.category-Security.severity = warning
-
-# IDE0040: Remove accessibility modifiers
-dotnet_style_require_accessibility_modifiers = never
-
-# IDE0160: Convert to block scoped namespace
-dotnet_diagnostic.IDE0008.severity = warning
-dotnet_diagnostic.IDE0055.severity = warning
-dotnet_diagnostic.IDE0160.severity = none
-dotnet_diagnostic.IDE0302.severity = warning
-
-dotnet_diagnostic.CS1591.severity = warning
-
-
-# IDE0022: Use block body for method
-csharp_style_expression_bodied_methods = when_on_single_line
-
-# IDE0130: Namespace does not match folder structure
-dotnet_diagnostic.IDE0130.severity = none
-
-# IDE0058: Expression value is never used
-dotnet_diagnostic.IDE0058.severity = none
+# New line preferences
+end_of_line = crlf
+insert_final_newline = true

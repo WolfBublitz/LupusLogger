@@ -1,5 +1,9 @@
 {
     "cSpell.words": [
         "EXCE"
-    ]
+    ],
+    "[csharp]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-dotnettools.csharp"
+    }
 }
