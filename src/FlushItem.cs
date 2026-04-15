@@ -23,7 +23,6 @@ internal sealed class FlushItem
     /// </summary>
     public Task Task => taskCompletionSource.Task;
 
-
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Public Methods                                                              │
     // └─────────────────────────────────────────────────────────────────────────────┘
