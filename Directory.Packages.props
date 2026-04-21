@@ -27,7 +27,7 @@
     <PackageVersion Include="WB.CodeAnalyzer" Version="1.0.0" />
     <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
     <PackageVersion Include="AwesomeAssertions.Analyzers" Version="9.0.8" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.103" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.202" />
     <PackageVersion Include="Microsoft.Testing.Platform" Version="2.0.2" />
     <PackageVersion Include="TUnit" Version="1.33.0" />
     <PackageVersion Include="Verify" Version="31.15.0" />
