@@ -12,8 +12,7 @@ namespace WB.Logging;
 /// <summary>
 /// Initializes a new instance of the <see cref="Logger"/> class.
 /// </summary>
-/// <param name="name">The name of the logger.</param>
-public sealed class Logger(string name) : ILogger
+public sealed class Logger: ILogger
 {
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Fields                                                              │
@@ -37,7 +36,27 @@ public sealed class Logger(string name) : ILogger
 
     private readonly ConcurrentBag<IAsyncLogSink> asyncLogSinks = [];
 
+    private readonly ConcurrentBag<ILogMessageFilter> logMessageFilters = [];
+    
+    private readonly MinimumLogLevelFilter minimumLogLevelFilter = new(LogLevel.Info);
+
     private int isDisposed;
+
+    // ┌─────────────────────────────────────────────────────────────────────────────┐
+    // │ Public Constructors                                                         │
+    // └─────────────────────────────────────────────────────────────────────────────┘
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Logger"/> class with the specified name.
+    /// </summary>
+    /// <param name="name">The name of the logger.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is <c>null</c>.</exception>
+    public Logger(string name)
+    {
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+
+        logMessageFilters.Add(minimumLogLevelFilter);
+    }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Constructors                                                        │
@@ -67,7 +86,7 @@ public sealed class Logger(string name) : ILogger
         => [.. asyncLogSinks];
 
     /// <inheritdoc/>
-    public string Name { get; } = name;
+    public string Name { get; }
 
     /// <inheritdoc/>
     /// <remarks>
@@ -77,9 +96,9 @@ public sealed class Logger(string name) : ILogger
     /// </remarks>
     public LogLevel? MinimumLogLevel
     {
-        get => field ?? parent?.MinimumLogLevel;
-        set;
-    } = LogLevel.Info;
+        get => minimumLogLevelFilter.MinimumLogLevel ?? parent?.MinimumLogLevel;
+        set => minimumLogLevelFilter.MinimumLogLevel = value;
+    }
 
     /// <summary>
     /// Gets or sets the parent <see cref="ILogger"/>.
@@ -196,6 +215,14 @@ public sealed class Logger(string name) : ILogger
         return childLogger;
     }
 
+    /// <inheritdoc/>
+    public IDisposable AddLogMessageFilter(ILogMessageFilter filter)
+    {
+        logMessageFilters.Add(filter);
+
+        return new DelegateDisposable(() => logMessageFilters.TryTake(out _));
+    }
+
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │
     // └─────────────────────────────────────────────────────────────────────────────┘
@@ -205,6 +232,12 @@ public sealed class Logger(string name) : ILogger
         logMessage.AddSender(Name);
 
         if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
+        {
+            return;
+        }
+
+        // Apply filters to the log message
+        if (!logMessageFilters.All(filter => filter.IsMatch(logMessage)))
         {
             return;
         }
