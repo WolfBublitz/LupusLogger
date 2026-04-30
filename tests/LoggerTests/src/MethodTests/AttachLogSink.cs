@@ -10,11 +10,6 @@ internal sealed class TestLogSink : ILogSink
 {
     public readonly List<ILogMessage<object>> ReceivedMessages = [];
 
-    public IDisposable AddFilter(ILogMessageFilter filter)
-    {
-        throw new NotImplementedException();
-    }
-
     public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
         where TPayload : notnull
         => ReceivedMessages.Add((ILogMessage<object>)logMessage);
@@ -23,11 +18,6 @@ internal sealed class TestLogSink : ILogSink
 internal sealed class TestAsyncLogSink : IAsyncLogSink
 {
     public readonly List<ILogMessage<object>> ReceivedMessages = [];
-
-    public IDisposable AddFilter(ILogMessageFilter filter)
-    {
-        throw new NotImplementedException();
-    }
 
     public ValueTask SubmitAsync<TPayload>(ILogMessage<TPayload> logMessage)
         where TPayload : notnull

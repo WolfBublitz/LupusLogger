@@ -9,11 +9,6 @@ internal sealed class TestLogSink : ILogSink, IDisposable
 {
     public bool IsDisposed { get; private set; }
 
-    public IDisposable AddFilter(ILogMessageFilter filter)
-    {
-        throw new NotImplementedException();
-    }
-
     public void Dispose()
         => IsDisposed = true;
 
@@ -25,11 +20,6 @@ internal sealed class TestLogSink : ILogSink, IDisposable
 internal sealed class AsyncTestLogSink : ILogSink, IAsyncDisposable
 {
     public bool IsDisposed { get; private set; }
-
-    public IDisposable AddFilter(ILogMessageFilter filter)
-    {
-        throw new NotImplementedException();
-    }
 
     public ValueTask DisposeAsync()
     {

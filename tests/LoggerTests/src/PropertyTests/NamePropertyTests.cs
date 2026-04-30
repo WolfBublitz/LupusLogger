@@ -11,11 +11,6 @@ internal sealed class TestLogSink : ILogSink
 {
     public readonly List<ILogMessage<object>> LogMessages = [];
 
-    public IDisposable AddFilter(ILogMessageFilter filter)
-    {
-        throw new NotImplementedException();
-    }
-
     public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
         where TPayload : notnull
         => LogMessages.Add((ILogMessage<object>)logMessage);

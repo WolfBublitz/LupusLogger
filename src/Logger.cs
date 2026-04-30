@@ -12,7 +12,7 @@ namespace WB.Logging;
 /// <summary>
 /// Initializes a new instance of the <see cref="Logger"/> class.
 /// </summary>
-public sealed class Logger: ILogger
+public sealed class Logger : ILogger
 {
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Fields                                                              │
@@ -36,9 +36,9 @@ public sealed class Logger: ILogger
 
     private readonly ConcurrentBag<IAsyncLogSink> asyncLogSinks = [];
 
-    private readonly ConcurrentBag<ILogMessageFilter> logMessageFilters = [];
-    
-    private readonly MinimumLogLevelFilter minimumLogLevelFilter = new(LogLevel.Info);
+    private readonly LogMessageFilterRegistry logMessageFilterRegistry = new();
+
+    private readonly IDisposable minimumLogLevelFilter;
 
     private int isDisposed;
 
@@ -55,7 +55,7 @@ public sealed class Logger: ILogger
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
 
-        logMessageFilters.Add(minimumLogLevelFilter);
+        minimumLogLevelFilter = AddLogMessageFilter<object>(logMessage => logMessage.LogLevel is null || logMessage.LogLevel >= MinimumLogLevel);
     }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -96,8 +96,8 @@ public sealed class Logger: ILogger
     /// </remarks>
     public LogLevel? MinimumLogLevel
     {
-        get => minimumLogLevelFilter.MinimumLogLevel ?? parent?.MinimumLogLevel;
-        set => minimumLogLevelFilter.MinimumLogLevel = value;
+        get => field ?? parent?.MinimumLogLevel;
+        set;
     }
 
     /// <summary>
@@ -156,6 +156,8 @@ public sealed class Logger: ILogger
                 await asyncDisposableLogSink.DisposeAsync().ConfigureAwait(false);
             }
         }
+
+        minimumLogLevelFilter.Dispose();
     }
 
     /// <inheritdoc/>
@@ -216,12 +218,9 @@ public sealed class Logger: ILogger
     }
 
     /// <inheritdoc/>
-    public IDisposable AddLogMessageFilter(ILogMessageFilter filter)
-    {
-        logMessageFilters.Add(filter);
-
-        return new DelegateDisposable(() => logMessageFilters.TryTake(out _));
-    }
+    public IDisposable AddLogMessageFilter<TPayload>(LogMessageFilter<TPayload> filter)
+        where TPayload : notnull
+        => logMessageFilterRegistry.RegisterLogMessageFilter(filter);
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │
@@ -237,7 +236,7 @@ public sealed class Logger: ILogger
         }
 
         // Apply filters to the log message
-        if (!logMessageFilters.All(filter => filter.IsMatch(logMessage)))
+        if (!logMessageFilterRegistry.IsMatch(logMessage))
         {
             return;
         }
