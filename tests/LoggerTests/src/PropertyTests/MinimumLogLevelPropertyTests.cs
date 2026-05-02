@@ -8,11 +8,11 @@ namespace LoggerTests.PropertyTests.MinimumLogLevelPropertyTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<ILogMessage<object>> LogMessage = [];
+    public readonly List<ILogMessage<object>> LogMessages = [];
 
     public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
         where TPayload : notnull
-        => LogMessage.Add((ILogMessage<object>)logMessage);
+        => LogMessages.Add((ILogMessage<object>)logMessage);
 }
 
 public sealed class TheMinimumLogLevelProperty
@@ -51,8 +51,8 @@ public sealed class TheMinimumLogLevelProperty
         await logger.FlushAsync().ConfigureAwait(false);
 
         // Assert
-        testLogSink.LogMessage.Should().HaveCount(expectedLogCount, because: "only messages with a LogLevel greater than or equal to the MinimumLogLevel should be logged.");
-        testLogSink.LogMessage.Should().OnlyContain(logMessage => logMessage.LogLevel >= minimumLogLevel, because: "only messages with a LogLevel greater than or equal to the MinimumLogLevel should be logged.");
+        testLogSink.LogMessages.Should().HaveCount(expectedLogCount, because: "only messages with a LogLevel greater than or equal to the MinimumLogLevel should be logged.");
+        testLogSink.LogMessages.Should().OnlyContain(logMessage => logMessage.LogLevel >= minimumLogLevel, because: "only messages with a LogLevel greater than or equal to the MinimumLogLevel should be logged.");
     }
 
     [Test]
