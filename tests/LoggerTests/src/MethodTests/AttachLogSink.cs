@@ -113,7 +113,7 @@ public sealed class TheAttachLogSinkMethod
     }
 
     [Test]
-    public async Task ShouldReturnAnDisposableThatDetachesTheAsyncLogSinkWhenDisposed()
+    public async Task ShouldReturnADisposableThatDetachesTheAsyncLogSinkWhenDisposed()
     {
         // Arrange
         string loggerName = "TestLogger";
