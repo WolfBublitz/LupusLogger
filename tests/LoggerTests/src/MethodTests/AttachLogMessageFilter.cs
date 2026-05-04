@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AwesomeAssertions;
@@ -8,11 +7,12 @@ namespace LoggerTests.MethodTests.AttachLogMessageFilterMethodTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<ILogMessage<object>> ReceivedMessages = [];
-
+    public readonly List<object> ReceivedMessages = [];
     public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
         where TPayload : notnull
-        => ReceivedMessages.Add((ILogMessage<object>)logMessage);
+    {
+        ReceivedMessages.Add(logMessage);
+    }
 }
 
 public sealed class TheAttachLogMessageFilterMethod
@@ -36,8 +36,12 @@ public sealed class TheAttachLogMessageFilterMethod
 
         // Assert
         testLogSink.ReceivedMessages.Should().HaveCount(2);
-        testLogSink.ReceivedMessages[0].Payload.Should().Be("INCLUDE this message");
-        testLogSink.ReceivedMessages[1].Payload.Should().Be("INCLUDE another message");
+
+        ILogMessage<string> firstMessage = (ILogMessage<string>)testLogSink.ReceivedMessages[0];
+        ILogMessage<string> secondMessage = (ILogMessage<string>)testLogSink.ReceivedMessages[1];
+
+        firstMessage.Payload.Should().Be("INCLUDE this message");
+        secondMessage.Payload.Should().Be("INCLUDE another message");
     }
 
     [Test]
@@ -59,8 +63,8 @@ public sealed class TheAttachLogMessageFilterMethod
         await logger.FlushAsync().ConfigureAwait(false);
 
         // Assert
-        testLogSink.ReceivedMessages.Should().ContainSingle()
-            .Which.Payload.Should().Be("msg123");
+        ILogMessage<string> singleMessage = (ILogMessage<string>)testLogSink.ReceivedMessages[0];
+        singleMessage.Payload.Should().Be("msg123");
     }
 
     [Test]
@@ -72,7 +76,7 @@ public sealed class TheAttachLogMessageFilterMethod
         await using Logger logger = new(loggerName);
         logger.AttachLogSink(testLogSink);
         logger.AddLogMessageFilter<object>(logMessage => logMessage.Payload.ToString()?.StartsWith("INCLUDE") ?? false);
-        logger.AddLogMessageFilter<object>(logMessage => logMessage.Payload is int i && i > 5);
+        logger.AddLogMessageFilter<int>(logMessage => logMessage.Payload > 5);
 
         // Act
         logger.Log(LogLevel.Info, "INCLUDE this");   // String passes
@@ -83,8 +87,10 @@ public sealed class TheAttachLogMessageFilterMethod
 
         // Assert
         testLogSink.ReceivedMessages.Should().HaveCount(2);
-        testLogSink.ReceivedMessages[0].Payload.Should().Be("INCLUDE this");
-        testLogSink.ReceivedMessages[1].Payload.Should().Be(10);
+        ILogMessage<string> firstMessage = (ILogMessage<string>)testLogSink.ReceivedMessages[0];
+        ILogMessage<int> secondMessage = (ILogMessage<int>)testLogSink.ReceivedMessages[1];
+        firstMessage.Payload.Should().Be("INCLUDE this");
+        secondMessage.Payload.Should().Be(10);
     }
 
     [Test]
@@ -99,12 +105,14 @@ public sealed class TheAttachLogMessageFilterMethod
 
         // Act
         logger.Log(LogLevel.Info, "INCLUDE message 1");
+        await logger.FlushAsync().ConfigureAwait(false);
         filterDisposable.Dispose();
         logger.Log(LogLevel.Info, "EXCLUDE message 2");
         await logger.FlushAsync().ConfigureAwait(false);
 
         // Assert
-        testLogSink.ReceivedMessages.Should().HaveCount(2)
-            .And.AllSatisfy(msg => msg.Payload.Should().BeOfType<string>());
+        testLogSink.ReceivedMessages.Should().HaveCount(1);
+        ILogMessage<string> firstMessage = (ILogMessage<string>)testLogSink.ReceivedMessages[0];
+        firstMessage.Payload.Should().Be("INCLUDE message 1");
     }
 }

@@ -98,7 +98,7 @@ public sealed class Logger : ILogger
     {
         get => field ?? parent?.MinimumLogLevel;
         set;
-    }
+    } = LogLevel.Info;
 
     /// <summary>
     /// Gets or sets the parent <see cref="ILogger"/>.
@@ -230,18 +230,21 @@ public sealed class Logger : ILogger
     {
         logMessage.AddSender(Name);
 
-        if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
+        if (logMessage.Payload is not FlushItem)
         {
-            return;
-        }
+            if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
+            {
+                return;
+            }
 
-        // Apply filters to the log message
-        if (!logMessageFilterRegistry.IsMatch(logMessage))
-        {
-            return;
-        }
+            // Apply filters to the log message
+            if (!logMessageFilterRegistry.IsMatch(logMessage))
+            {
+                return;
+            }
 
-        parent?.Log(logMessage);
+            parent?.Log(logMessage);
+        }
 
         logMessageQueue.Post(() =>
         {
