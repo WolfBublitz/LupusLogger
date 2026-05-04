@@ -24,7 +24,7 @@ public sealed class TheParentProperty
     {
         // Arrange
         await using Logger parentLogger = new("ParentLogger");
-        ILogger childLogger = parentLogger.CreateChildLogger("ChildLogger");
+        await using Logger childLogger = parentLogger.CreateChildLogger("ChildLogger");
 
         // Act
         ILogger? parent = childLogger.Parent;
