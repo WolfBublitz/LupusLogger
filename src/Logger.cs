@@ -56,7 +56,7 @@ public sealed class Logger : ILogger
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
 
-        minimumLogLevelFilter = AddLogMessageFilter<object>(logMessage => logMessage.LogLevel is null || logMessage.LogLevel >= MinimumLogLevel);
+        minimumLogLevelFilter = AddLogMessageFilter(logMessage => logMessage.LogLevel is null || logMessage.LogLevel >= MinimumLogLevel);
     }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -219,9 +219,8 @@ public sealed class Logger : ILogger
     }
 
     /// <inheritdoc/>
-    public IDisposable AddLogMessageFilter<TPayload>(LogMessageFilter<TPayload> filter)
-        where TPayload : notnull
-        => logMessageFilterRegistry.RegisterLogMessageFilter(filter);
+    public IDisposable AddLogMessageFilter(LogMessageFilter filter)
+        => logMessageFilterRegistry.Add(filter);
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │

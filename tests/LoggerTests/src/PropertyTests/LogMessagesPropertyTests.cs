@@ -8,11 +8,10 @@ namespace LoggerTests.PropertyTests.LogMessagesPropertyTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<ILogMessage<object>> LogMessages = [];
+    public readonly List<LogMessage> LogMessages = [];
 
-    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
-        where TPayload : notnull
-        => LogMessages.Add((ILogMessage<object>)logMessage);
+    public void Submit(LogMessage logMessage)
+        => LogMessages.Add(logMessage);
 }
 
 public sealed class TheLogMessagesProperty
