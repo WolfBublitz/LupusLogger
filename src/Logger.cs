@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Microsoft.Extensions.ObjectPool;
 
 namespace WB.Logging;
 
@@ -36,7 +37,7 @@ public sealed class Logger : ILogger
 
     private readonly ConcurrentBag<IAsyncLogSink> asyncLogSinks = [];
 
-    private readonly LogMessageFilterRegistry logMessageFilterRegistry = new();
+    private readonly LogMessageFilters logMessageFilterRegistry = new();
 
     private readonly IDisposable minimumLogLevelFilter;
 
@@ -181,7 +182,7 @@ public sealed class Logger : ILogger
     public void Log<TPayload>(LogLevel? logLevel, TPayload payload)
         where TPayload : notnull
     {
-        LogMessage<TPayload> logMessage = new()
+        LogMessage logMessage = new()
         {
             Timestamp = TimestampProvider.CurrentTimestamp,
             LogLevel = logLevel,
@@ -225,8 +226,7 @@ public sealed class Logger : ILogger
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │
     // └─────────────────────────────────────────────────────────────────────────────┘
-    private void Log<TPayload>(LogMessage<TPayload> logMessage)
-        where TPayload : notnull
+    private void Log(LogMessage logMessage)
     {
         logMessage.AddSender(Name);
 

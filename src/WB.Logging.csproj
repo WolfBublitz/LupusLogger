@@ -130,4 +130,11 @@
     <ProjectReference Include="$(PathToLocalProjects)WB.Logging.Base/src/WB.Logging.Base.csproj" />
   </ItemGroup>
 
+  <!-- ╭──────────────────────────────────────────────────────────────────────╮
+       │ 3rd Party Package References                                         │
+       ╰──────────────────────────────────────────────────────────────────────╯ -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" />
+  </ItemGroup>
+
 </Project>
