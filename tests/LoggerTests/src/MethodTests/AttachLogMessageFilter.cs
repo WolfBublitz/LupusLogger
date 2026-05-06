@@ -70,8 +70,8 @@ public sealed class TheAttachLogMessageFilterMethod
         TestLogSink testLogSink = new();
         await using Logger logger = new(loggerName);
         logger.AttachLogSink(testLogSink);
-        logger.AddLogMessageFilter(logMessage => logMessage.Payload.ToString()?.StartsWith("INCLUDE") ?? false);
-        logger.AddLogMessageFilter(logMessage => logMessage.Payload is int i && i > 5);
+        logger.AddLogMessageFilter(logMessage => logMessage.Payload is not string s || s.StartsWith("INCLUDE"));
+        logger.AddLogMessageFilter(logMessage => logMessage.Payload is not int i || i > 5);
 
         // Act
         logger.Log(LogLevel.Info, "INCLUDE this");   // String passes

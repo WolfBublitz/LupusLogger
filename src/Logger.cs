@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using Microsoft.Extensions.ObjectPool;
 
 namespace WB.Logging;
 
@@ -99,7 +98,7 @@ public sealed class Logger : ILogger
     {
         get => field ?? parent?.MinimumLogLevel;
         set;
-    }
+    } = LogLevel.Info;
 
     /// <summary>
     /// Gets or sets the parent <see cref="ILogger"/>.
@@ -229,18 +228,16 @@ public sealed class Logger : ILogger
     {
         logMessage.AddSender(Name);
 
-        if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
-        {
-            return;
-        }
-
         // Apply filters to the log message
-        if (!logMessageFilterRegistry.IsMatch(logMessage))
+        if (logMessage.Payload is not FlushItem)
         {
-            return;
-        }
+            if (!logMessageFilterRegistry.IsMatch(logMessage))
+            {
+                return;
+            }
 
-        parent?.Log(logMessage);
+            parent?.Log(logMessage);
+        }
 
         logMessageQueue.Post(() =>
         {
