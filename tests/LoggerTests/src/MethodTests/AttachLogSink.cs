@@ -8,21 +8,19 @@ namespace LoggerTests.MethodTests.AttachLogSinkMethodTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<ILogMessage<object>> ReceivedMessages = [];
+    public readonly List<LogMessage> ReceivedMessages = [];
 
-    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
-        where TPayload : notnull
-        => ReceivedMessages.Add((ILogMessage<object>)logMessage);
+    public void Submit(LogMessage logMessage)
+        => ReceivedMessages.Add(logMessage);
 }
 
 internal sealed class TestAsyncLogSink : IAsyncLogSink
 {
-    public readonly List<ILogMessage<object>> ReceivedMessages = [];
+    public readonly List<LogMessage> ReceivedMessages = [];
 
-    public ValueTask SubmitAsync<TPayload>(ILogMessage<TPayload> logMessage)
-        where TPayload : notnull
+    public ValueTask SubmitAsync(LogMessage logMessage)
     {
-        ReceivedMessages.Add((ILogMessage<object>)logMessage);
+        ReceivedMessages.Add(logMessage);
 
         return ValueTask.CompletedTask;
     }

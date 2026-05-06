@@ -16,13 +16,11 @@ internal static class ILogSinkExtensions
     /// Submits the <paramref name="logMessage"/> to <paramref name="this"/> <see cref="ILogSink"/> safely, 
     /// catching any exceptions that occur and logging them to the console or a fallback logger instead of throwing.
     /// </summary>
-    /// <typeparam name="TPayload">The type of the log message payload.</typeparam>
     /// <param name="this">The <see cref="ILogSink"/> to submit the log message to.</param>
     /// <param name="logMessage">The log message to submit.</param>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We want to catch all exceptions to prevent logging failures from crashing the application.")]
-    internal static Task SubmitSafeAsync<TPayload>(this ILogSink @this, ILogMessage<TPayload> logMessage)
-        where TPayload : notnull
+    internal static Task SubmitSafeAsync(this ILogSink @this, LogMessage logMessage)
     {
         return Task.Run(() =>
         {

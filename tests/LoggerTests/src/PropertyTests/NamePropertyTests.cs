@@ -9,11 +9,10 @@ namespace LoggerTests.PropertyTests.NamePropertyTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<ILogMessage<object>> LogMessages = [];
+    public readonly List<LogMessage> LogMessages = [];
 
-    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
-        where TPayload : notnull
-        => LogMessages.Add((ILogMessage<object>)logMessage);
+    public void Submit(LogMessage logMessage)
+        => LogMessages.Add(logMessage);
 }
 
 public sealed class TheNameProperty
@@ -44,7 +43,7 @@ public sealed class TheNameProperty
         // Act
         childLogger.Log(LogLevel.Info, "Hello, world.");
         await childLogger.FlushAsync().ConfigureAwait(false);
-        ILogMessage<object> logMessage = testLogSink.LogMessages.Last();
+        LogMessage logMessage = testLogSink.LogMessages.Last();
 
         // Assert
         logMessage.Senders.Should().HaveCount(2, because: "the log message should have two senders: the logger and its child logger.");

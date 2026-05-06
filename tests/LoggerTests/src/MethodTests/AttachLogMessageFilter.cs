@@ -8,11 +8,10 @@ namespace LoggerTests.MethodTests.AttachLogMessageFilterMethodTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<ILogMessage<object>> ReceivedMessages = [];
+    public readonly List<LogMessage> ReceivedMessages = [];
 
-    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
-        where TPayload : notnull
-        => ReceivedMessages.Add((ILogMessage<object>)logMessage);
+    public void Submit(LogMessage logMessage)
+        => ReceivedMessages.Add(logMessage);
 }
 
 public sealed class TheAttachLogMessageFilterMethod
@@ -26,7 +25,7 @@ public sealed class TheAttachLogMessageFilterMethod
 
         await using Logger logger = new(loggerName);
         logger.AttachLogSink(testLogSink);
-        logger.AddLogMessageFilter<object>(logMessage => logMessage.Payload.ToString()?.Contains("INCLUDE") ?? false);
+        logger.AddLogMessageFilter(logMessage => logMessage.Payload.ToString()?.Contains("INCLUDE") ?? false);
 
         // Act
         logger.Log(LogLevel.Info, "INCLUDE this message");
@@ -48,8 +47,8 @@ public sealed class TheAttachLogMessageFilterMethod
         TestLogSink testLogSink = new();
         await using Logger logger = new(loggerName);
         logger.AttachLogSink(testLogSink);
-        logger.AddLogMessageFilter<object>(logMessage => logMessage.Payload.ToString()?.Length > 3);
-        logger.AddLogMessageFilter<object>(logMessage => logMessage.Payload.ToString()?.StartsWith("msg") ?? false);
+        logger.AddLogMessageFilter(logMessage => logMessage.Payload.ToString()?.Length > 3);
+        logger.AddLogMessageFilter(logMessage => logMessage.Payload.ToString()?.StartsWith("msg") ?? false);
 
         // Act
         logger.Log(LogLevel.Info, "msg123");         // Passes both filters
@@ -71,8 +70,8 @@ public sealed class TheAttachLogMessageFilterMethod
         TestLogSink testLogSink = new();
         await using Logger logger = new(loggerName);
         logger.AttachLogSink(testLogSink);
-        logger.AddLogMessageFilter<object>(logMessage => logMessage.Payload.ToString()?.StartsWith("INCLUDE") ?? false);
-        logger.AddLogMessageFilter<object>(logMessage => logMessage.Payload is int i && i > 5);
+        logger.AddLogMessageFilter(logMessage => logMessage.Payload is not string s || s.StartsWith("INCLUDE"));
+        logger.AddLogMessageFilter(logMessage => logMessage.Payload is not int i || i > 5);
 
         // Act
         logger.Log(LogLevel.Info, "INCLUDE this");   // String passes
@@ -95,7 +94,7 @@ public sealed class TheAttachLogMessageFilterMethod
         TestLogSink testLogSink = new();
         await using Logger logger = new(loggerName);
         logger.AttachLogSink(testLogSink);
-        var filterDisposable = logger.AddLogMessageFilter<object>(logMessage => logMessage.Payload.ToString()?.StartsWith("INCLUDE") ?? false);
+        var filterDisposable = logger.AddLogMessageFilter(logMessage => logMessage.Payload.ToString()?.StartsWith("INCLUDE") ?? false);
 
         // Act
         logger.Log(LogLevel.Info, "INCLUDE message 1");

@@ -36,7 +36,7 @@ public sealed class Logger : ILogger
 
     private readonly ConcurrentBag<IAsyncLogSink> asyncLogSinks = [];
 
-    private readonly LogMessageFilterRegistry logMessageFilterRegistry = new();
+    private readonly LogMessageFilters logMessageFilterRegistry = new();
 
     private readonly IDisposable minimumLogLevelFilter;
 
@@ -55,7 +55,7 @@ public sealed class Logger : ILogger
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
 
-        minimumLogLevelFilter = AddLogMessageFilter<object>(logMessage => logMessage.LogLevel is null || logMessage.LogLevel >= MinimumLogLevel);
+        minimumLogLevelFilter = AddLogMessageFilter(logMessage => logMessage.LogLevel is null || logMessage.LogLevel >= MinimumLogLevel);
     }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -98,7 +98,7 @@ public sealed class Logger : ILogger
     {
         get => field ?? parent?.MinimumLogLevel;
         set;
-    }
+    } = LogLevel.Info;
 
     /// <summary>
     /// Gets or sets the parent <see cref="ILogger"/>.
@@ -181,7 +181,7 @@ public sealed class Logger : ILogger
     public void Log<TPayload>(LogLevel? logLevel, TPayload payload)
         where TPayload : notnull
     {
-        LogMessage<TPayload> logMessage = new()
+        LogMessage logMessage = new()
         {
             Timestamp = TimestampProvider.CurrentTimestamp,
             LogLevel = logLevel,
@@ -218,30 +218,26 @@ public sealed class Logger : ILogger
     }
 
     /// <inheritdoc/>
-    public IDisposable AddLogMessageFilter<TPayload>(LogMessageFilter<TPayload> filter)
-        where TPayload : notnull
-        => logMessageFilterRegistry.RegisterLogMessageFilter(filter);
+    public IDisposable AddLogMessageFilter(LogMessageFilter filter)
+        => logMessageFilterRegistry.Add(filter);
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │
     // └─────────────────────────────────────────────────────────────────────────────┘
-    private void Log<TPayload>(LogMessage<TPayload> logMessage)
-        where TPayload : notnull
+    private void Log(LogMessage logMessage)
     {
         logMessage.AddSender(Name);
 
-        if (logMessage.LogLevel is not null && logMessage.LogLevel < MinimumLogLevel)
-        {
-            return;
-        }
-
         // Apply filters to the log message
-        if (!logMessageFilterRegistry.IsMatch(logMessage))
+        if (logMessage.Payload is not FlushItem)
         {
-            return;
-        }
+            if (!logMessageFilterRegistry.IsMatch(logMessage))
+            {
+                return;
+            }
 
-        parent?.Log(logMessage);
+            parent?.Log(logMessage);
+        }
 
         logMessageQueue.Post(() =>
         {

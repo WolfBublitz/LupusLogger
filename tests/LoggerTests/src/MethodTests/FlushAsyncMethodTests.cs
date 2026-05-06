@@ -9,11 +9,10 @@ namespace LoggerTests.MethodTests.FlushAsyncMethodTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<ILogMessage<object>> ReceivedMessages = [];
+    public readonly List<LogMessage> ReceivedMessages = [];
 
-    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
-        where TPayload : notnull
-        => ReceivedMessages.Add((ILogMessage<object>)logMessage);
+    public void Submit(LogMessage logMessage)
+        => ReceivedMessages.Add(logMessage);
 }
 
 public sealed class TheFlushAsyncMethod
