@@ -181,11 +181,11 @@ public sealed class Logger : ILogger
     public void Log<TPayload>(LogLevel? logLevel, TPayload payload)
         where TPayload : notnull
     {
-        LogMessage logMessage = new()
+        LogMessage<TPayload> logMessage = new()
         {
             Timestamp = TimestampProvider.CurrentTimestamp,
             LogLevel = logLevel,
-            Payload = payload
+            Payload = payload,
         };
 
         Log(logMessage);
@@ -224,7 +224,8 @@ public sealed class Logger : ILogger
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │
     // └─────────────────────────────────────────────────────────────────────────────┘
-    private void Log(LogMessage logMessage)
+    private void Log<TPayload>(LogMessage<TPayload> logMessage)
+        where TPayload : notnull
     {
         logMessage.AddSender(Name);
 
