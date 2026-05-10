@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace WB.Logging;
 
-internal sealed record LogMessage<TPayload> : ILogMessagea<TPayload>
+internal sealed record LogMessage<TPayload> : ILogMessage<TPayload>
     where TPayload : notnull
 {
     // ┌─────────────────────────────────────────────────────────────────────────────┐

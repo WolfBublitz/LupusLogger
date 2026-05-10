@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using WB.Logging;
@@ -8,17 +9,19 @@ namespace LoggerTests.MethodTests.AttachLogSinkMethodTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<LogMessage> ReceivedMessages = [];
+    public readonly List<ILogMessage> ReceivedMessages = [];
 
-    public void Submit(LogMessage logMessage)
+    public void Write<TPayload>(ILogMessage<TPayload> logMessage)
+        where TPayload : notnull
         => ReceivedMessages.Add(logMessage);
 }
 
 internal sealed class TestAsyncLogSink : IAsyncLogSink
 {
-    public readonly List<LogMessage> ReceivedMessages = [];
+    public readonly List<ILogMessage> ReceivedMessages = [];
 
-    public ValueTask SubmitAsync(LogMessage logMessage)
+    public ValueTask WriteAsync<TPayload>(ILogMessage<TPayload> logMessage, CancellationToken cancellationToken)
+        where TPayload : notnull
     {
         ReceivedMessages.Add(logMessage);
 

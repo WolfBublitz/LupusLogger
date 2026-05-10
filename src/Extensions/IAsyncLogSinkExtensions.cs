@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WB.Logging;
@@ -16,15 +17,18 @@ internal static class IAsyncLogSinkExtensions
     /// Submits the <paramref name="logMessage"/> to <paramref name="this"/> <see cref="IAsyncLogSink"/> safely, 
     /// catching any exceptions that occur and logging them to the console or a fallback logger instead of throwing.
     /// </summary>
+    /// <typeparam name="TPayload">The <see cref="Type"/> of the payload of the log message.</typeparam>
     /// <param name="this">The <see cref="IAsyncLogSink"/> to submit the log message to.</param>
     /// <param name="logMessage">The log message to submit.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We want to catch all exceptions to prevent logging failures from crashing the application.")]
-    internal static async Task SubmitSafeAsync(this IAsyncLogSink @this, LogMessage logMessage)
+    internal static async Task SubmitSafeAsync<TPayload>(this IAsyncLogSink @this, ILogMessage<TPayload> logMessage, CancellationToken cancellationToken = default)
+        where TPayload : notnull
     {
         try
         {
-            await @this.SubmitAsync(logMessage).ConfigureAwait(false);
+            await @this.WriteAsync(logMessage, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
