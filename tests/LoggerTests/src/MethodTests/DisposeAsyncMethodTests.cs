@@ -13,7 +13,7 @@ internal sealed class TestLogSink : ILogSink, IDisposable
     public void Dispose()
         => IsDisposed = true;
 
-    public void Write<TPayload>(ILogMessage<TPayload> logMessage)
+    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
         where TPayload : notnull
         => throw new NotImplementedException("This test log sink should not be used to submit log messages.");
 }
@@ -28,7 +28,7 @@ internal sealed class AsyncTestLogSink : IAsyncLogSink, IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask WriteAsync<TPayload>(ILogMessage<TPayload> logMessage, CancellationToken cancellationToken)
+    public ValueTask SubmitAsync<TPayload>(ILogMessage<TPayload> logMessage, CancellationToken cancellationToken)
         where TPayload : notnull
         => throw new NotImplementedException("This test log sink should not be used to submit log messages.");
 }

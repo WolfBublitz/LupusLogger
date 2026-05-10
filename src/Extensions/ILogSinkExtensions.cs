@@ -28,7 +28,7 @@ internal static class ILogSinkExtensions
         {
             try
             {
-                @this.Write(logMessage);
+                @this.Submit(logMessage);
             }
             catch (Exception ex)
             {

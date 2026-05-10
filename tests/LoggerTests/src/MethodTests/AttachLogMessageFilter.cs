@@ -10,7 +10,7 @@ internal sealed class TestLogSink : ILogSink
 {
     public readonly List<ILogMessage> ReceivedMessages = [];
 
-    public void Write<TPayload>(ILogMessage<TPayload> logMessage)
+    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
         where TPayload : notnull
         => ReceivedMessages.Add(logMessage);
 }

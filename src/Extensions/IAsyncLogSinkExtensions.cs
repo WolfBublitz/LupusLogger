@@ -28,7 +28,7 @@ internal static class IAsyncLogSinkExtensions
     {
         try
         {
-            await @this.WriteAsync(logMessage, cancellationToken).ConfigureAwait(false);
+            await @this.SubmitAsync(logMessage, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

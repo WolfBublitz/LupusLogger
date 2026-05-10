@@ -11,7 +11,7 @@ internal sealed class TestLogSink : ILogSink
 {
     public readonly List<ILogMessage> ReceivedMessages = [];
 
-    public void Write<TPayload>(ILogMessage<TPayload> logMessage)
+    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
         where TPayload : notnull
         => ReceivedMessages.Add(logMessage);
 }
@@ -20,7 +20,7 @@ internal sealed class TestAsyncLogSink : IAsyncLogSink
 {
     public readonly List<ILogMessage> ReceivedMessages = [];
 
-    public ValueTask WriteAsync<TPayload>(ILogMessage<TPayload> logMessage, CancellationToken cancellationToken)
+    public ValueTask SubmitAsync<TPayload>(ILogMessage<TPayload> logMessage, CancellationToken cancellationToken)
         where TPayload : notnull
     {
         ReceivedMessages.Add(logMessage);
