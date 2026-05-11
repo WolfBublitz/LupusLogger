@@ -99,6 +99,7 @@ public sealed class TheAttachLogMessageFilterMethod
 
         // Act
         logger.Log(LogLevel.Info, "INCLUDE message 1");
+        await logger.FlushAsync().ConfigureAwait(false);
         filterDisposable.Dispose();
         logger.Log(LogLevel.Info, "EXCLUDE message 2");
         await logger.FlushAsync().ConfigureAwait(false);
