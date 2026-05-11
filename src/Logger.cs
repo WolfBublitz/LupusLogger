@@ -132,6 +132,7 @@ public sealed class Logger : ILogger
         }
 
         await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+        cancellationTokenSource.Dispose();
         await logMessageProcessingTask.ConfigureAwait(false);
 
         foreach (ILogger childLogger in childLoggers)
