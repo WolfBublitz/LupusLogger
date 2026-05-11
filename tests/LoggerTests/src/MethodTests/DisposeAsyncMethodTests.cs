@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using WB.Logging;
@@ -12,11 +13,12 @@ internal sealed class TestLogSink : ILogSink, IDisposable
     public void Dispose()
         => IsDisposed = true;
 
-    public void Submit(LogMessage logMessage)
+    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
+        where TPayload : notnull
         => throw new NotImplementedException("This test log sink should not be used to submit log messages.");
 }
 
-internal sealed class AsyncTestLogSink : ILogSink, IAsyncDisposable
+internal sealed class AsyncTestLogSink : IAsyncLogSink, IAsyncDisposable
 {
     public bool IsDisposed { get; private set; }
 
@@ -26,7 +28,8 @@ internal sealed class AsyncTestLogSink : ILogSink, IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
-    public void Submit(LogMessage logMessage)
+    public ValueTask SubmitAsync<TPayload>(ILogMessage<TPayload> logMessage, CancellationToken cancellationToken)
+        where TPayload : notnull
         => throw new NotImplementedException("This test log sink should not be used to submit log messages.");
 }
 

@@ -2,11 +2,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 namespace WB.Logging;
+
+internal delegate Task Dispatcher(ILogMessage logMessage, CancellationToken cancellationToken);
 
 /// <inheritdoc/>
 /// <summary>
@@ -19,16 +23,15 @@ public sealed class Logger : ILogger
     // └─────────────────────────────────────────────────────────────────────────────┘
     private readonly Logger? parent;
 
-    private readonly ActionBlock<Func<Task>> logMessageQueue = new(
-            async logMessageAction =>
-            {
-                await logMessageAction().ConfigureAwait(false);
-            },
-            new ExecutionDataflowBlockOptions
-            {
-                MaxDegreeOfParallelism = 1,
-                EnsureOrdered = true
-            });
+    private readonly Channel<ILogMessage> logMessageQueue = Channel.CreateUnbounded<ILogMessage>(new UnboundedChannelOptions
+    {
+        SingleReader = true,
+        SingleWriter = true,
+    });
+
+    private readonly Task logMessageProcessingTask;
+
+    private readonly CancellationTokenSource cancellationTokenSource = new();
 
     private readonly ConcurrentBag<ILogger> childLoggers = [];
 
@@ -36,9 +39,11 @@ public sealed class Logger : ILogger
 
     private readonly ConcurrentBag<IAsyncLogSink> asyncLogSinks = [];
 
-    private readonly LogMessageFilters logMessageFilterRegistry = new();
+    private readonly LogMessageFilterPipeline logMessageFilterPipeline = new();
 
     private readonly IDisposable minimumLogLevelFilter;
+
+    private readonly ConcurrentDictionary<Type, Dispatcher> dispatchCache = new();
 
     private int isDisposed;
 
@@ -56,6 +61,7 @@ public sealed class Logger : ILogger
         Name = name ?? throw new ArgumentNullException(nameof(name));
 
         minimumLogLevelFilter = AddLogMessageFilter(logMessage => logMessage.LogLevel is null || logMessage.LogLevel >= MinimumLogLevel);
+        logMessageProcessingTask = ExecuteAsync(cancellationTokenSource.Token);
     }
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -125,8 +131,9 @@ public sealed class Logger : ILogger
             return;
         }
 
-        logMessageQueue.Complete();
-        await logMessageQueue.Completion.ConfigureAwait(false);
+        await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+        cancellationTokenSource.Dispose();
+        await logMessageProcessingTask.ConfigureAwait(false);
 
         foreach (ILogger childLogger in childLoggers)
         {
@@ -181,14 +188,16 @@ public sealed class Logger : ILogger
     public void Log<TPayload>(LogLevel? logLevel, TPayload payload)
         where TPayload : notnull
     {
-        LogMessage logMessage = new()
+        LogMessage<TPayload> logMessage = new()
         {
             Timestamp = TimestampProvider.CurrentTimestamp,
             LogLevel = logLevel,
-            Payload = payload
+            Payload = payload,
         };
 
         Log(logMessage);
+
+        parent?.Log(logMessage);
     }
 
     /// <inheritdoc/>
@@ -219,43 +228,81 @@ public sealed class Logger : ILogger
 
     /// <inheritdoc/>
     public IDisposable AddLogMessageFilter(LogMessageFilter filter)
-        => logMessageFilterRegistry.Add(filter);
+        => logMessageFilterPipeline.Add(filter);
 
     // ┌─────────────────────────────────────────────────────────────────────────────┐
     // │ Private Methods                                                             │
     // └─────────────────────────────────────────────────────────────────────────────┘
-    private void Log(LogMessage logMessage)
+
+    private void Log<TPayload>(LogMessage<TPayload> logMessage)
+        where TPayload : notnull
     {
         logMessage.AddSender(Name);
 
-        // Apply filters to the log message
-        if (logMessage.Payload is not FlushItem)
-        {
-            if (!logMessageFilterRegistry.IsMatch(logMessage))
-            {
-                return;
-            }
+        logMessageQueue.Writer.TryWrite(logMessage);
+    }
 
-            parent?.Log(logMessage);
+    private async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (ILogMessage logMessage in logMessageQueue.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (logMessage.Payload is FlushItem flushItem)
+                {
+                    flushItem.Complete();
+                }
+                else if (logMessageFilterPipeline.IsMatch(logMessage))
+                {
+                    await DispatchAsync(logMessage, cancellationToken).ConfigureAwait(false);
+                }
+            }
         }
-
-        logMessageQueue.Post(() =>
+        catch (OperationCanceledException)
         {
-            if (logMessage.Payload is FlushItem flushItem)
-            {
-                flushItem.Complete();
+            // normal shutdown
+        }
+    }
 
-                return Task.CompletedTask;
-            }
-            else
-            {
-                Task[] submitTasks = [
-                    .. logSinks.Select(logSink => logSink.SubmitSafeAsync(logMessage)),
-                    .. asyncLogSinks.Select(asyncLogSink => asyncLogSink.SubmitSafeAsync(logMessage))
-                ];
+    private Task DispatchAsync(ILogMessage logMessage, CancellationToken cancellationToken)
+    {
+        Type payloadType = logMessage.Payload.GetType();
 
-                return Task.WhenAll(submitTasks);
-            }
-        });
+        Dispatcher dispatcher = dispatchCache.GetOrAdd(
+            payloadType,
+            static (t, self) => self.CreateDispatcher(t),
+            this);
+
+        return dispatcher(logMessage, cancellationToken);
+    }
+
+    private Dispatcher CreateDispatcher(Type payloadType)
+    {
+        ParameterExpression logMessageParameter = Expression.Parameter(typeof(ILogMessage), "msg");
+        ParameterExpression cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "ct");
+
+        UnaryExpression cast = Expression.Convert(logMessageParameter, typeof(ILogMessage<>).MakeGenericType(payloadType));
+
+        MethodCallExpression methodCall = Expression.Call(
+            Expression.Constant(this),
+            typeof(Logger)
+                .GetMethod(nameof(DispatchTyped), BindingFlags.NonPublic | BindingFlags.Instance)!
+                .MakeGenericMethod(payloadType),
+            cast,
+            cancellationTokenParameter);
+
+        Expression<Dispatcher> lambda = Expression.Lambda<Dispatcher>(methodCall, logMessageParameter, cancellationTokenParameter);
+        return lambda.Compile();
+    }
+
+    private Task DispatchTyped<TPayload>(ILogMessage logMessage, CancellationToken cancellationToken)
+        where TPayload : notnull
+    {
+        ILogMessage<TPayload> typedLogMessage = (ILogMessage<TPayload>)logMessage;
+
+        Task[] tasks = [.. logSinks.Select(logSink => logSink.WriteSafeAsync(typedLogMessage)),
+            .. asyncLogSinks.Select(asyncLogSink => asyncLogSink.SubmitSafeAsync(typedLogMessage, cancellationToken))];
+
+        return Task.WhenAll(tasks);
     }
 }

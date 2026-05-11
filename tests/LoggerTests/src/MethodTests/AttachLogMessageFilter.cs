@@ -8,9 +8,10 @@ namespace LoggerTests.MethodTests.AttachLogMessageFilterMethodTests;
 
 internal sealed class TestLogSink : ILogSink
 {
-    public readonly List<LogMessage> ReceivedMessages = [];
+    public readonly List<ILogMessage> ReceivedMessages = [];
 
-    public void Submit(LogMessage logMessage)
+    public void Submit<TPayload>(ILogMessage<TPayload> logMessage)
+        where TPayload : notnull
         => ReceivedMessages.Add(logMessage);
 }
 
@@ -98,6 +99,7 @@ public sealed class TheAttachLogMessageFilterMethod
 
         // Act
         logger.Log(LogLevel.Info, "INCLUDE message 1");
+        await logger.FlushAsync().ConfigureAwait(false);
         filterDisposable.Dispose();
         logger.Log(LogLevel.Info, "EXCLUDE message 2");
         await logger.FlushAsync().ConfigureAwait(false);
